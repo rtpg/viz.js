@@ -73,15 +73,20 @@ class Viz {
       nop = 0,
     } = {}
   ) {
-    if (files.length || images.length) {
-      throw new Error("Not implemented");
+    for (const { path, width, height } of images) {
+      files.push({
+        path,
+        data:
+          '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
+          '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
+          `<svg width="${width}" height="${height}"></svg>`,
+      });
     }
 
     return this.wrapper.render(src, {
       format,
       engine,
       files,
-      images,
       yInvert,
       nop,
     });

@@ -5,8 +5,6 @@
 - **BREAKING:** Bump required version of Node.js to v12 LTS (might work on v10
   using CLI flags).
 - **BREAKING:** Limit the API to `renderString` and `renderJSON`.
-- **BREAKING:** Images and files support has not been ported, it might come back
-  later; raise an issue if that's something you'd like to be implemented.
 - **BREAKING:** Remove support for non-worker environment (you must now specify
   either `worker` or `workerURL` on the `Viz` constructor).
 - **BREAKING:** Remove _lite_ version, Viz.js now comes in only one variant.

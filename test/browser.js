@@ -328,4 +328,76 @@ describe("Test graph rendering using web browser", function() {
     assert.strictEqual(node1Text, "a");
     assert.strictEqual(node2Text, "b");
   });
+
+  it('can reference images by name if dimensions are specified using the "images" option', async function() {
+    const [name, width, height] = await page.evaluate(() =>
+      window.getViz().then(viz =>
+        viz
+          .renderString('digraph { a[image="test.png"]; }', {
+            images: [{ path: "test.png", width: 400, height: 300 }],
+          })
+          .then(window.parseSVG)
+          .then(({ documentElement }) => [
+            documentElement
+              .querySelector("image")
+              .getAttributeNS("http://www.w3.org/1999/xlink", "href"),
+            documentElement.querySelector("image").getAttribute("width"),
+            documentElement.querySelector("image").getAttribute("height"),
+          ])
+      )
+    );
+
+    assert.strictEqual(name, "test.png");
+    assert.strictEqual(width, "400px");
+    assert.strictEqual(height, "300px");
+  });
+
+  it("can reference images with a protocol and hostname", async function() {
+    const result = await page.evaluate(() =>
+      window.getViz().then(viz =>
+        viz
+          .renderString(
+            'digraph { a[id="a",image="http://example.com/xyz/test.png"]; b[id="b",image="http://example.com/xyz/test2.png"]; }',
+            {
+              images: [
+                {
+                  path: "http://example.com/xyz/test.png",
+                  width: 400,
+                  height: 300,
+                },
+                {
+                  path: "http://example.com/xyz/test2.png",
+                  width: 300,
+                  height: 200,
+                },
+              ],
+            }
+          )
+          .then(window.parseSVG)
+          .then(({ documentElement }) => [
+            documentElement
+              .querySelector("#a image")
+              .getAttributeNS("http://www.w3.org/1999/xlink", "href"),
+            documentElement.querySelector("#a image").getAttribute("width"),
+            documentElement.querySelector("#a image").getAttribute("height"),
+
+            documentElement
+              .querySelector("#b image")
+              .getAttributeNS("http://www.w3.org/1999/xlink", "href"),
+            documentElement.querySelector("#b image").getAttribute("width"),
+            documentElement.querySelector("#b image").getAttribute("height"),
+          ])
+      )
+    );
+
+    assert.deepStrictEqual(result, [
+      "http://example.com/xyz/test.png",
+      "400px",
+      "300px",
+
+      "http://example.com/xyz/test2.png",
+      "300px",
+      "200px",
+    ]);
+  });
 });

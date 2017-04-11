@@ -27,10 +27,10 @@ const wasmInitialisation = new Promise(done => {
 
 function render(src, options) {
   "use strict";
-  // var i;
-  // for (i = 0; i < options.files.length; i++) {
-  //   instance['ccall']('vizCreateFile', 'number', ['string', 'string'], [options.files[i].path, options.files[i].data]);
-  // }
+
+  for (const file of options.files) {
+    Module.vizCreateFile(file.path, file.data);
+  }
 
   Module.vizSetY_invert(options.yInvert ? 1 : 0);
   Module.vizSetNop(options.nop || 0);

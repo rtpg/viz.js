@@ -30,6 +30,16 @@ void vizSetY_invert(int invert) {
   Y_invert = invert;
 }
 
+void vizCreateFile(std::string path, std::string data) {
+  EM_ASM(({
+    var path = UTF8ToString($0);
+    var data = UTF8ToString($1);
+    
+    FS.createPath("/", PATH.dirname(path));
+    FS.writeFile(PATH.join("/", path), data);
+  }), path.c_str(), data.c_str());
+}
+
 void vizSetNop(int value) {
   if (value != 0)
     Nop = value;
@@ -76,6 +86,7 @@ std::string vizRenderFromString(std::string src, std::string format, std::string
 EMSCRIPTEN_BINDINGS(viz_js) {
   function("vizRenderFromString", &vizRenderFromString);
   function("vizSetY_invert", &vizSetY_invert);
+  function("vizCreateFile", &vizCreateFile);
   function("vizSetNop", &vizSetNop);
   function("vizLastErrorMessage", &vizLastErrorMessage);
 }
