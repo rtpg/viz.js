@@ -3,7 +3,13 @@
   "version": "2.1.2",
   "description": "A hack to put Graphviz on the web.",
   "main": "viz.js",
-  "module": "viz.es.js",
+  "module": "viz.es.mjs",
+  "exports": {
+    "require": "viz.js",
+    "import": "viz.es.mjs",
+    "./full.render": "./full.render.js",
+    "./lite.render": "./lite.render.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mdaines/viz.js.git"
@@ -14,7 +20,7 @@
   ],
   "files": [
     "viz.js",
-    "viz.es.js",
+    "viz.es.mjs",
     "full.render.js",
     "lite.render.js"
   ],

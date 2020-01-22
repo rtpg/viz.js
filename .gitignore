@@ -7,6 +7,6 @@ sources/
 node_modules/
 
 viz.js
-viz.es.js
+viz.es.mjs
 full.render.js
 lite.render.js

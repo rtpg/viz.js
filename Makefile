@@ -12,7 +12,7 @@ GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1
 .PHONY: all deps deps-full deps-lite clean clobber expat–full graphviz-full graphviz-lite
 
 
-all: full.render.js lite.render.js viz.js viz.es.js
+all: full.render.js lite.render.js viz.js viz.es.mjs
 
 deps: deps-full deps-lite
 
@@ -22,7 +22,7 @@ deps-lite: graphviz-lite
 
 
 clean:
-	rm -f build-main/viz.js build-main/viz.es.js viz.js viz.es.js
+	rm -f build-main/viz.js build-main/viz.es.mjs viz.js viz.es.mjs
 	rm -f build-full/module.js build-full/pre.js full.render.js
 	rm -f build-lite/module.js build-lite/pre.js lite.render.js
 
@@ -30,10 +30,10 @@ clobber: | clean
 	rm -rf build-main build-full build-lite $(PREFIX_FULL) $(PREFIX_LITE)
 
 
-viz.es.js: src/boilerplate/pre-main.js build-main/viz.es.js
+viz.es.mjs: src/boilerplate/pre-main.js build-main/viz.es.mjs
 	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{EXPAT_VERSION}}/$(EXPAT_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
 
-build-main/viz.es.js: src/index.js .babelrc
+build-main/viz.es.mjs: src/index.js .babelrc
 	mkdir -p build-main
 	node_modules/.bin/rollup --config rollup.config.es.js
 
