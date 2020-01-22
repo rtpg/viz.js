@@ -4,14 +4,19 @@ class WorkerWrapper {
     this.listeners = [];
     this.nextId = 0;
 
-    this.worker.addEventListener("message", event => {
-      let id = event.data.id;
-      let error = event.data.error;
-      let result = event.data.result;
+    if (this.worker.on) {
+      // Node.js worker
+      this.worker.on("message", this._eventListener);
+    } else {
+      this.worker.addEventListener("message", this._eventListener);
+    }
+  }
 
-      this.listeners[id](error, result);
-      delete this.listeners[id];
-    });
+  _eventListener(event) {
+    const { id, error, result } = event.data;
+
+    this.listeners[id](error, result);
+    delete this.listeners[id];
   }
 
   render(src, options) {
