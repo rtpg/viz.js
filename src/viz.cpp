@@ -1,5 +1,8 @@
-#include <gvc.h>
 #include <emscripten.h>
+#include <emscripten/bind.h>
+#include <gvc.h>
+
+using namespace emscripten;
 
 extern int Y_invert;
 extern int Nop;
@@ -17,18 +20,9 @@ int vizErrorf(char *buf) {
   return 0;
 }
 
-char* vizLastErrorMessage() {
-  return errorMessage;
-}
-
-void vizCreateFile(char *path, char *data) {
-  EM_ASM_({
-    var path = Pointer_stringify($0);
-    var data = Pointer_stringify($1);
-    
-    FS.createPath("/", PATH.dirname(path));
-    FS.writeFile(PATH.join("/", path), data);
-  }, path, data);
+std::string vizLastErrorMessage() {
+  std::string str(errorMessage);
+  return str;
 }
 
 void vizSetY_invert(int invert) {
@@ -40,10 +34,12 @@ void vizSetNop(int value) {
     Nop = value;
 }
 
-char* vizRenderFromString(const char *src, const char *format, const char *engine) {
+std::string vizRenderFromString(std::string src, std::string format, std::string engine) {
   GVC_t *context;
   Agraph_t *graph;
-  char *result = NULL;
+  const char *input = src.c_str();
+  char *output = NULL;
+  std::string result;
   unsigned int length;
   
   context = gvContext();
@@ -58,17 +54,27 @@ char* vizRenderFromString(const char *src, const char *format, const char *engin
   
   agreadline(1);
   
-  while ((graph = agmemread(src))) {
-    if (result == NULL) {
-      gvLayout(context, graph, engine);
-      gvRenderData(context, graph, format, &result, &length);
+  while ((graph = agmemread(input))) {
+    if (output == NULL) {
+      gvLayout(context, graph, engine.c_str());
+      gvRenderData(context, graph, format.c_str(), &output, &length);
       gvFreeLayout(context, graph);
     }
     
     agclose(graph);
     
-    src = "";
+    input = "";
   }
+
+  result.assign(output, length);
+  free(output);
   
   return result;
+}
+
+EMSCRIPTEN_BINDINGS(viz_js) {
+  function("vizRenderFromString", &vizRenderFromString);
+  function("vizSetY_invert", &vizSetY_invert);
+  function("vizSetNop", &vizSetNop);
+  function("vizLastErrorMessage", &vizLastErrorMessage);
 }
