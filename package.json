@@ -1,28 +1,31 @@
 {
-  "name": "viz.js",
-  "version": "2.1.2",
+  "name": "@aduh95/viz.js",
+  "version": "3.0.0-beta",
   "description": "A hack to put Graphviz on the web.",
   "main": "viz.js",
-  "module": "viz.es.mjs",
+  "module": "./src/index.mjs",
   "exports": {
     "require": "viz.js",
-    "import": "viz.es.mjs",
-    "./full.render": "./full.render.js",
-    "./lite.render": "./lite.render.js"
+    "import": "./src/index.mjs",
+    "./worker": "./src/worker.js"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=12.8.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mdaines/viz.js.git"
+    "url": "https://github.com/aduh95/viz.js.git"
   },
   "keywords": [
     "graphviz",
     "emscripten"
   ],
   "files": [
-    "viz.js",
-    "viz.es.mjs",
-    "full.render.js",
-    "lite.render.js"
+    "src/index.mjs",
+    "src/worker.js",
+    "src/render.js",
+    "src/render.wasm"
   ],
   "browser": {
     "fs": false,
@@ -35,18 +38,10 @@
   "author": "Mike Daines <mdaines@fastmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mdaines/viz.js/issues"
+    "url": "https://github.com/aduh95/viz.js/issues"
   },
-  "homepage": "https://github.com/mdaines/viz.js",
+  "homepage": "https://github.com/aduh95/viz.js",
   "devDependencies": {
-    "@babel/core": "^7.8.3",
-    "@babel/plugin-external-helpers": "^7.8.3",
-    "@babel/preset-env": "^7.8.3",
-    "minimist": "^1.2.0",
-    "mocha": "^7.0.0",
-    "rollup": "^1.29.1",
-    "rollup-plugin-babel": "^4.3.3",
-    "selenium-webdriver": "^4.0.0-alpha.5",
-    "tiny-worker": "^2.1.2"
+    "mocha": "^7.0.0"
   }
 }

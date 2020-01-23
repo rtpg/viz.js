@@ -12,55 +12,31 @@ GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1
 .PHONY: all deps deps-full deps-lite clean clobber expat–full graphviz-full graphviz-lite
 
 
-all: full.render.js lite.render.js viz.js viz.es.mjs
+all: src/render.js src/render.wasm
 
-deps: deps-full deps-lite
+debug:
+	mkdir -p $@
+	rm -rf $@/*
+	$(MAKE) debug/out.js
 
-deps-full: expat-full graphviz-full
+debug/out.js: src/viz.cpp
+	EMCC_DEBUG=1 emcc --bind -g4 -o $@ $< -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-deps-lite: graphviz-lite
-
+deps: expat-full graphviz-full
 
 clean:
-	rm -f build-main/viz.js build-main/viz.es.mjs viz.js viz.es.mjs
 	rm -f build-full/module.js build-full/pre.js full.render.js
-	rm -f build-lite/module.js build-lite/pre.js lite.render.js
 
 clobber: | clean
 	rm -rf build-main build-full build-lite $(PREFIX_FULL) $(PREFIX_LITE)
 
-
-viz.es.mjs: src/boilerplate/pre-main.js build-main/viz.es.mjs
+src/render.js: src/boilerplate/module-header.txt build-full/render.js
 	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{EXPAT_VERSION}}/$(EXPAT_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
+	mv build-full/render.wasm src/render.wasm
 
-build-main/viz.es.mjs: src/index.js .babelrc
-	mkdir -p build-main
-	node_modules/.bin/rollup --config rollup.config.es.js
-
-
-viz.js: src/boilerplate/pre-main.js build-main/viz.js
-	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{EXPAT_VERSION}}/$(EXPAT_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
-
-build-main/viz.js: src/index.js .babelrc
-	mkdir -p build-main
-	node_modules/.bin/rollup --config rollup.config.js
-
-
-full.render.js: src/boilerplate/pre-module-full.js build-full/module.js src/boilerplate/post-module.js
-	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{EXPAT_VERSION}}/$(EXPAT_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
-
-build-full/module.js: src/viz.cpp
+build-full/render.js: src/viz.cpp
 	emcc --version | grep $(EMSCRIPTEN_VERSION)
 	emcc --bind -Oz -o $@ $< -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
-
-
-lite.render.js: src/boilerplate/pre-module-lite.js build-lite/module.js src/boilerplate/post-module.js
-	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
-
-build-lite/module.js: src/viz.cpp
-	emcc --version | grep $(EMSCRIPTEN_VERSION)
-	emcc --bind -D VIZ_LITE -o $@ $< -I$(PREFIX_LITE)/include -I$(PREFIX_LITE)/include/graphviz -L$(PREFIX_LITE)/lib -L$(PREFIX_LITE)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lcgraph -lgvc -lgvpr -lpathplan -lxdot -lcdt
-
 
 $(PREFIX_FULL):
 	mkdir -p $(PREFIX_FULL)
@@ -82,21 +58,6 @@ graphviz-full: | build-full/graphviz-$(GRAPHVIZ_VERSION) $(PREFIX_FULL)
 	cd build-full/graphviz-$(GRAPHVIZ_VERSION)/plugin && emmake make --quiet install
 
 
-$(PREFIX_LITE):
-	mkdir -p $(PREFIX_LITE)
-
-graphviz-lite: | build-lite/graphviz-$(GRAPHVIZ_VERSION) $(PREFIX_LITE)
-	grep $(GRAPHVIZ_VERSION) build-lite/graphviz-$(GRAPHVIZ_VERSION)/graphviz_version.h
-	cd build-lite/graphviz-$(GRAPHVIZ_VERSION) && ./configure --quiet
-	cd build-lite/graphviz-$(GRAPHVIZ_VERSION)/lib/gvpr && make --quiet mkdefs CFLAGS="-w"
-	mkdir -p build-lite/graphviz-$(GRAPHVIZ_VERSION)/FEATURE
-	cp hacks/FEATURE/sfio hacks/FEATURE/vmalloc build-lite/graphviz-$(GRAPHVIZ_VERSION)/FEATURE
-	cd build-lite/graphviz-$(GRAPHVIZ_VERSION) && emconfigure ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_LITE) --libdir=$(PREFIX_LITE)/lib CFLAGS="-Oz -w"
-	cd build-lite/graphviz-$(GRAPHVIZ_VERSION) && emmake make --quiet lib plugin
-	cd build-lite/graphviz-$(GRAPHVIZ_VERSION)/lib && emmake make --quiet install
-	cd build-lite/graphviz-$(GRAPHVIZ_VERSION)/plugin && emmake make --quiet install
-
-
 build-full/expat-$(EXPAT_VERSION): sources/expat-$(EXPAT_VERSION).tar.bz2
 	mkdir -p $@
 	tar -jxf sources/expat-$(EXPAT_VERSION).tar.bz2 --strip-components 1 -C $@
@@ -104,11 +65,6 @@ build-full/expat-$(EXPAT_VERSION): sources/expat-$(EXPAT_VERSION).tar.bz2
 build-full/graphviz-$(GRAPHVIZ_VERSION): sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz
 	mkdir -p $@
 	tar -zxf sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz --strip-components 1 -C $@
-
-build-lite/graphviz-$(GRAPHVIZ_VERSION): sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz
-	mkdir -p $@
-	tar -zxf sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz --strip-components 1 -C $@
-
 
 sources:
 	mkdir -p sources

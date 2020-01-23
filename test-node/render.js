@@ -1,49 +1,40 @@
-const Viz = require('../viz.js');
-const { Module, render } = require('../full.render.js');
-const assert = require('assert');
-const path = require('path');
-const Worker = require('tiny-worker');
+const assert = require("assert");
 
-it('should render a graph using tiny-worker', function() {
-  let worker = new Worker(path.resolve(__dirname, '../full.render.js'));
-  let viz = new Viz({ worker });
-  
-  return viz.renderString('digraph { a -> b; }')
-  .then(function(result) {
-    assert.ok(result);
-    worker.terminate();
-  });
-});
+async function getViz() {
+  const worker = await import("../src/worker.js").then(
+    module => module.default
+  );
+  const Viz = await import("../src/index.mjs").then(module => module.default);
+  return new Viz({ worker });
+}
+const globalViz = getViz();
 
-it('should render a graph using the Module and render functions exported by the render script file', function() {
-  let viz = new Viz({ Module, render });
-  
-  return viz.renderString('digraph { a -> b; }')
-  .then(function(result) {
+it("should render a graph using worker", async function() {
+  const viz = await globalViz;
+  return viz.renderString("digraph { a -> b; }").then(function(result) {
     assert.ok(result);
   });
 });
 
-it('should throw descriptive error when not enough memory allocated', function() {
-  let worker = new Worker(path.resolve(__dirname, '../full.render.js'));
-  let viz = new Viz({ worker });
-  let dot = 'digraph {';
+it("should throw descriptive error when not enough memory allocated", async function() {
+  const viz = await globalViz;
+
+  let dot = "digraph {";
   for (let i = 0; i < 50000; ++i) {
     dot += `node${i} -> node${i + 1};`;
   }
-  dot += '}';
+  dot += "}";
 
   return viz.renderString(dot).then(
     () => {
-     worker.terminate();
-     assert.fail('should throw');
+      assert.fail("should throw");
     },
     error => {
-      worker.terminate();
       assert(
         /Cannot enlarge memory arrays/.test(error.message),
-        'should return descriptive error',
+        "should return descriptive error",
+        console.error(error)
       );
-    },
+    }
   );
 });

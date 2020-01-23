@@ -1,4 +1,4 @@
-const WASM_MODULE_ENTRY = "../build-full/module.js";
+const WASM_MODULE_ENTRY = "./render.js";
 
 let parentPort = {};
 
