@@ -7,7 +7,7 @@ if ("function" === typeof importScripts) {
 } else if ("function" === typeof require) {
   const { parentPort: pt, isMainThread, Worker } = require("worker_threads");
   if (isMainThread) {
-    module.exports = new Worker(__filename);
+    module.exports = () => new Worker(__filename);
     return;
   }
   Module = require(WASM_MODULE_ENTRY);
@@ -38,7 +38,7 @@ function render(src, options) {
 
   var errorMessageString = Module.vizLastErrorMessage();
 
-  if (errorMessageString != "") {
+  if (errorMessageString !== "") {
     throw new Error(errorMessageString);
   }
 
