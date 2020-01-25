@@ -21,6 +21,7 @@ int vizErrorf(char *buf) {
 }
 
 std::string vizLastErrorMessage() {
+  if (errorMessage == NULL) return "";
   std::string str(errorMessage);
   return str;
 }
