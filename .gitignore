@@ -9,3 +9,5 @@ debug/
 
 src/render.js
 src/render.wasm
+src/render.wasm.map
+src/render.wast

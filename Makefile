@@ -9,34 +9,39 @@ EMSCRIPTEN_VERSION = 1.38.44
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
 
-.PHONY: all deps deps-full deps-lite clean clobber expat–full graphviz-full graphviz-lite
+CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1
+CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
+
+.PHONY: all deps debug clean clobber expat–full graphviz-full graphviz-lite
 
 
 all: src/render.js src/render.wasm
 
 debug:
-	mkdir -p $@
-	rm -rf $@/*
-	$(MAKE) debug/out.js
-
-debug/out.js: src/viz.cpp
-	EMCC_DEBUG=1 emcc --bind -g4 -o $@ $< -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
+	$(MAKE) clean
+	EMCC_DEBUG=1 emcc $(CC_FLAGS) -s ASSERTIONS=2 -g4 -o src/render.js src/viz.cpp $(CC_INCLUDES)
 
 deps: expat-full graphviz-full
 
 clean:
-	rm -f build-full/module.js build-full/pre.js full.render.js
+	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
+	rm -f build-full/render.js build-full/render.wasm
+	rm -f src/render.js src/render.wasm
 
 clobber: | clean
 	rm -rf build-main build-full build-lite $(PREFIX_FULL) $(PREFIX_LITE)
 
 src/render.js: src/boilerplate/module-header.txt build-full/render.js
 	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{EXPAT_VERSION}}/$(EXPAT_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
+
+src/render.wasm: build-full/render.wasm
 	mv build-full/render.wasm src/render.wasm
 
 build-full/render.js: src/viz.cpp
 	emcc --version | grep $(EMSCRIPTEN_VERSION)
-	emcc --bind -Oz -o $@ $< -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
+	emcc $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
+
+build-full/render.wasm: build-full/render.js
 
 $(PREFIX_FULL):
 	mkdir -p $(PREFIX_FULL)
