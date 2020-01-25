@@ -1,40 +1,39 @@
 const assert = require("assert");
 
 async function getViz() {
-  const worker = await import("@aduh95/viz.js/worker").then(
-    module => module.default
+  const worker = await import("@aduh95/viz.js/worker").then(module =>
+    module.default()
   );
   const Viz = await import("@aduh95/viz.js").then(module => module.default);
-  return new Viz({ worker });
+  return [new Viz({ worker }), worker];
 }
-const globalViz = getViz();
 
-it("should render a graph using worker", async function() {
-  const viz = await globalViz;
-  return viz.renderString("digraph { a -> b; }").then(function(result) {
-    assert.ok(result);
+describe("Test graph rendering under 500ms", function() {
+  this.timeout(500);
+
+  it("should render a graph using worker", async function() {
+    const [viz, worker] = await getViz();
+    return viz
+      .renderString("digraph { a -> b; }")
+      .then(result => assert.ok(result))
+      .finally(() => worker.terminate());
   });
-});
 
-it("should throw descriptive error when not enough memory allocated", async function() {
-  const viz = await globalViz;
+  it("should be able to render several graphs with same instance", async function() {
+    const [viz, worker] = await getViz();
 
-  let dot = "digraph {";
-  for (let i = 0; i < 50000; ++i) {
+    let dot = "digraph {";
+    let i = 0;
     dot += `node${i} -> node${i + 1};`;
-  }
-  dot += "}";
 
-  return viz.renderString(dot).then(
-    () => {
-      assert.fail("should throw");
-    },
-    error => {
-      assert(
-        /Cannot enlarge memory arrays/.test(error.message),
-        "should return descriptive error",
-        console.error(error)
-      );
-    }
-  );
+    return viz
+      .renderString(dot + "}")
+      .then(() => {
+        dot += `node${i} -> node${i + 1};`;
+
+        return viz.renderString(dot + "}");
+      })
+      .then(result => assert.ok(result))
+      .finally(() => worker.terminate());
+  });
 });

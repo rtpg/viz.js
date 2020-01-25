@@ -9,7 +9,9 @@ class WorkerWrapper {
 
     if (this._isNodeWorker) {
       this._worker.on("message", data => this._eventListener({ data }));
-      this._worker.on("error", console.error);
+      this._worker.on("error", e =>
+        this._listeners.forEach(listener => listener(e))
+      );
     } else {
       this._worker.addEventListener("message", this._eventListener);
     }
