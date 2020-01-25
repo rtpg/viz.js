@@ -1,10 +1,10 @@
 const assert = require("assert");
 
 async function getViz() {
-  const worker = await import("../src/worker.js").then(
+  const worker = await import("@aduh95/viz.js/worker").then(
     module => module.default
   );
-  const Viz = await import("../src/index.mjs").then(module => module.default);
+  const Viz = await import("@aduh95/viz.js").then(module => module.default);
   return new Viz({ worker });
 }
 const globalViz = getViz();
