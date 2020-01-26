@@ -1,27 +1,30 @@
 const WASM_MODULE_ENTRY = "./render.js";
 
-let parentPort = {};
-
 if ("function" === typeof importScripts) {
+  // On webworker
   importScripts(WASM_MODULE_ENTRY);
+  addEventListener("message", onmessage);
 } else if ("function" === typeof require) {
-  const { parentPort: pt, isMainThread, Worker } = require("worker_threads");
+  // On Node.js
+  const { parentPort, isMainThread, Worker } = require("worker_threads");
   if (isMainThread) {
+    Module = {};
     module.exports = () => new Worker(__filename);
-    return;
+  } else {
+    Module = require(WASM_MODULE_ENTRY);
+    parentPort.on("message", data => onmessage({ data }));
+    function postMessage() {
+      return parentPort.postMessage(...arguments);
+    }
   }
-  Module = require(WASM_MODULE_ENTRY);
-  parentPort = pt;
 }
 
-if ("function" === typeof parentPort.postMessage) {
-  // Polyfill for Node.js
-  function postMessage() {
-    return parentPort.postMessage(...arguments);
-  }
-}
+const wasmInitialisation = new Promise(done => {
+  Module.onRuntimeInitialized = done;
+});
 
 function render(src, options) {
+  "use strict";
   // var i;
   // for (i = 0; i < options.files.length; i++) {
   //   instance['ccall']('vizCreateFile', 'number', ['string', 'string'], [options.files[i].path, options.files[i].data]);
@@ -45,28 +48,25 @@ function render(src, options) {
   return resultString;
 }
 
-Module.onRuntimeInitialized = _ => {
-  onmessage = function(event) {
-    const { id, src, options } = event.data;
+function onmessage(event) {
+  "use strict";
+  const { id, src, options } = event.data;
 
-    try {
-      var result = render(src, options);
+  wasmInitialisation
+    .then(() => {
+      const result = render(src, options);
       postMessage({ id, result });
-    } catch (e) {
-      var error;
-      if (e instanceof Error) {
-        error = {
-          message: e.message,
-          fileName: e.fileName,
-          lineNumber: e.lineNumber,
-        };
-      } else {
-        error = { message: e.toString() };
-      }
+    })
+    .catch(e => {
+      const error =
+        e instanceof Error
+          ? {
+              message: e.message,
+              fileName: e.fileName,
+              lineNumber: e.lineNumber,
+            }
+          : { message: e.toString() };
+
       postMessage({ id, error });
-    }
-  };
-  if ("function" === typeof parentPort.on) {
-    parentPort.on("message", data => onmessage({ data }));
-  }
-};
+    });
+}
