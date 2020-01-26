@@ -13,7 +13,9 @@ class WorkerWrapper {
         this._listeners.forEach(listener => listener(e))
       );
     } else {
-      this._worker.addEventListener("message", this._eventListener);
+      this._worker.addEventListener("message", event =>
+        this._eventListener(event)
+      );
     }
   }
 
