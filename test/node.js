@@ -8,9 +8,7 @@ async function getViz() {
   return [new Viz({ worker }), worker];
 }
 
-describe("Test graph rendering under 500ms", function() {
-  this.timeout(500);
-
+describe("Test graph rendering using Node.js", function() {
   it("should render a graph using worker", async function() {
     const [viz, worker] = await getViz();
     return viz

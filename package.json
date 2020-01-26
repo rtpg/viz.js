@@ -35,7 +35,7 @@
     "crypto": false
   },
   "scripts": {
-    "test": "mocha test-node"
+    "test": "mocha test"
   },
   "author": "Mike Daines <mdaines@fastmail.com>",
   "license": "MIT",
@@ -44,6 +44,7 @@
   },
   "homepage": "https://github.com/aduh95/viz.js",
   "devDependencies": {
-    "mocha": "^7.0.0"
+    "mocha": "^7.0.0",
+    "puppeteer": "^2.0.0"
   }
 }
