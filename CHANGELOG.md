@@ -9,6 +9,7 @@
   later; raise an issue if that's something you'd like to be implemented.
 - **BREAKING:** Remove support for non-worker environment (you must now specify
   either `worker` or `workerURL` on the `Viz` constructor).
+- **BREAKING:** Remove _lite_ version, Viz.js now comes in only one variant.
 - Add support for Node.js `worker_threads`.
 - Use ES modules and WebAssembly (if you need support for ES5 or asm.js, you
   would need to transpile it yourself or use an older version).
@@ -19,6 +20,7 @@
   - Upgrade Emscripten to 1.38.44
   - Upgrade Graphviz to 2.43.x (unstable)
   - Upgrade Expat to 2.2.9
+  - Upgrade Mocha to 7.0.1
 
 ### Viz.js v2.1.2 (2018-12-08)
 
