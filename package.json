@@ -2,11 +2,11 @@
   "name": "@aduh95/viz.js",
   "version": "3.0.0-beta",
   "description": "A hack to put Graphviz on the web.",
-  "main": "viz.js",
+  "main": "./src/index.mjs",
   "module": "./src/index.mjs",
   "exports": {
     ".": {
-      "require": "viz.js",
+      "require": "./src/index.cjs",
       "import": "./src/index.mjs"
     },
     "./worker": "./src/worker.js"
@@ -24,20 +24,20 @@
     "emscripten"
   ],
   "files": [
+    "src/index.cjs",
     "src/index.mjs",
     "src/worker.js",
     "src/render.js",
     "src/render.wasm"
   ],
-  "browser": {
-    "fs": false,
-    "path": false,
-    "crypto": false
-  },
   "scripts": {
+    "build": "make",
     "test": "mocha test"
   },
-  "author": "Mike Daines <mdaines@fastmail.com>",
+  "contributors": [
+    "Mike Daines <mdaines@fastmail.com>",
+    "Antoine du Hamel <duhamelantoine1995@gmail.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/aduh95/viz.js/issues"

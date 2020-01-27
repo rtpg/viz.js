@@ -12,10 +12,63 @@ For more information, [see the wiki](https://github.com/mdaines/viz.js/wiki).
 
 Have a look at [Dagre](https://dagrejs.github.io/), which is not a hack.
 
-## Getting Viz.js
+## Usage
 
-- Install the [`viz.js` package](https://www.npmjs.com/package/viz.js) from npm.
-- Download from the [releases page](https://github.com/mdaines/viz.js/releases).
+### Node.js
+
+```js
+import Viz from "@aduh95/viz.js";
+import getWorker from "@aduh95/viz.js/worker";
+
+const worker = getWorker();
+const viz = new Viz({ worker });
+
+viz
+  .renderString("digraph{1 -> 2 }")
+  .then(svgString => {
+    console.log(svgString);
+  })
+  .catch(error => {
+    console.error(error);
+  })
+  .finally(() => {
+    // If you don't terminate the worker explicitly, it will be terminated at the end of process
+    worker.terminate();
+  });
+```
+
+If you want to use it from a CommonJS script, you would need to use a dynamic
+imports:
+
+```js
+async function dot2svg(dot, options = {}) {
+  const Viz = await import("@aduh95/viz.js").then(module => module.default);
+  const worker = await import("@aduh95/viz.js/worker").then(module =>
+    module.default()
+  );
+
+  const viz = new Viz({ worker });
+
+  return viz.renderString(dot, options);
+}
+```
+
+### Browsers
+
+In a world where Import Maps and `import.meta.resolve` are reality, you could
+have something like that:
+
+```js
+import Viz from "@aduh95/viz.js";
+
+async function dot2svg(dot, options) {
+  const workerURL = await import.meta.resolve("@aduh95/viz.js/worker");
+
+  const viz = new Viz({ workerURL });
+
+  return viz.renderString(dot, options);
+}
+```
 
 ## Building From Source
 
@@ -26,12 +79,11 @@ You'll also need [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com).
 On macOS:
 
 ```shell
-brew install yarn binaryen emscripten automake libtool pkg-config qt
+brew install binaryen emscripten automake libtool pkg-config qt
 ```
 
-Install the development dependencies using Yarn:
-
-    yarn install
+You will certainly need to tweak config files to make sure your system knows
+where it should find each binary.
 
 The build process for Viz.js is split into two parts: building the Graphviz and
 Expat dependencies, and building the rendering script files and API.
@@ -39,15 +91,11 @@ Expat dependencies, and building the rendering script files and API.
     make deps
     make all
 
-## Running Browser Tests
+## Running Tests
 
-The browser tests can be run locally using Selenium WebDriver.
+Install the development dependencies using Yarn:
 
-First, serve the project directory at http://localhost:8000.
-
-    python -m http.server
-
-Then, run tests using test-browser/runner.js. For example, to run
-`test-browser/full.html` in Chrome:
-
-    node test-browser/runner --file full.html --browser chrome
+```shell
+$ yarn install
+$ yarn test
+```
