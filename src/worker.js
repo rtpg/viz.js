@@ -2,7 +2,9 @@ const WASM_MODULE_ENTRY = "./render.js";
 
 if ("function" === typeof importScripts) {
   // On webworker
-  importScripts(WASM_MODULE_ENTRY);
+  const { href } = self.location;
+  const scriptDirectory = href.substr(0, href.lastIndexOf("/") + 1);
+  importScripts(scriptDirectory + WASM_MODULE_ENTRY);
   addEventListener("message", onmessage);
 } else if ("function" === typeof require) {
   // On Node.js
