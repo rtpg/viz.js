@@ -33,6 +33,7 @@ describe("Test graph rendering using web browser", function() {
     ])
   );
 
+  this.afterAll(() => page.close());
   after(() => Promise.all([server.close(), browser.close()]));
 
   this.beforeEach(async function() {
@@ -57,8 +58,6 @@ describe("Test graph rendering using web browser", function() {
       };
     });
   });
-
-  this.afterAll(() => page.close());
 
   it("rendering sample graphs should not throw errors", async function() {
     const graphs = [
@@ -183,5 +182,150 @@ describe("Test graph rendering using web browser", function() {
           assert.match(result, /åäö/, 'Result should contain "åäö"')
         ),
     ]);
+  });
+
+  it("repeated calls to render using setTimeout should not throw an error", async function() {
+    const memoryStressTest = (done, error) => {
+      let i = 0;
+      const NB_ITERATIONS = 500;
+      const MEMORY_TEST_SRC =
+        'digraph G{\n\ttype="digraph";rankdir="TB";use="dot";ranksep="0.3";\n\t949[fontname="Helvetica",color="#000000",shape="box",label="S&#xa;n0",fontcolor="#000000",]\n\t950[fontname="Helvetica",color="#000000",shape="box",label="S&#xa;n1",fontcolor="#000000",]\n\t951[fontname="Helvetica",color="#00cc00",shape="box",label="R&#xa;n2",fontcolor="#00cc00",]\n\t949->944[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="s&#xa;e0",fontcolor="#000000",]\n\t951->944[fontname="Helvetica",color="#00cc00",weight="1",constraint="true",label="ex&#xa;e1",fontcolor="#00cc00",]\n\t949->945[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="pr&#xa;e2",fontcolor="#000000",]\n\t950->946[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="aux&#xa;e3",fontcolor="#000000",]\n\t950->947[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="s&#xa;e4",fontcolor="#000000",]\n\t951->947[fontname="Helvetica",color="#00cc00",weight="1",constraint="true",label="ex&#xa;e5",fontcolor="#00cc00",]\n\t950->948[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="pr&#xa;e6",fontcolor="#000000",]\n\t949->950[fontname="Helvetica",color="#00cc00",weight="1",constraint="true",label="ad&#xa;rel: caus&#xa;e7",fontcolor="#00cc00",]\n\t944->945[style="invis",weight="100",]945->946[style="invis",weight="100",]946->947[style="invis",weight="100",]\n\t947->948[style="invis",weight="100",]\n\tsubgraph wnabyquvkgfmjxes{\n\t\trank="same";\n\t\t944[fontname="Helvetica",label="er&#xa;t0",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t945[fontname="Helvetica",label="stirbt&#xa;t1",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t946[fontname="Helvetica",label="weil&#xa;t2",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t947[fontname="Helvetica",label="er&#xa;t3",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t948[fontname="Helvetica",label="lacht&#xa;t4",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t}\n\tsubgraph vpmznchgjtuxbrfe{\n\t\t949[]\n\t\t950[]\n\t}\n\tsubgraph ohzxavtqesiunwlk{\n\t\t951[]\n\t}\n}';
+      function f() {
+        viz
+          .renderString(MEMORY_TEST_SRC)
+          .then(() => {
+            i++;
+
+            if (i === NB_ITERATIONS) {
+              done();
+            } else {
+              requestIdleCallback(f, { timeout: 100 });
+            }
+          })
+          .catch(error);
+      }
+
+      f();
+    };
+
+    await assert.doesNotReject(
+      page.evaluate(
+        `()=>window.getViz().then(viz=>new Promise(${memoryStressTest}))`
+      )
+    );
+  });
+
+  it("should accept yInvert option", async function() {
+    const viz = await page.evaluateHandle(() => window.getViz());
+
+    await page.evaluate(() => {
+      window.parse = output => output.match(/pos=\"[^\"]+\"/g).slice(0, 2);
+    });
+
+    const regular = await page.evaluate(
+      viz =>
+        viz
+          .renderString("digraph { a -> b; }", { format: "xdot" })
+          .then(window.parse),
+      viz
+    );
+
+    assert.notStrictEqual(
+      ...regular,
+      "Regular positions should not be equal to each other"
+    );
+
+    const inverted = await page.evaluate(
+      viz =>
+        viz
+          .renderString("digraph { a -> b; }", {
+            format: "xdot",
+            yInvert: true,
+          })
+          .then(window.parse),
+      viz
+    );
+
+    assert.notStrictEqual(
+      ...inverted,
+      "Inverted positions should not be equal to each other"
+    );
+
+    assert.deepStrictEqual(
+      inverted.reverse(),
+      regular,
+      "Inverted positions should be the reverse of regular"
+    );
+
+    assert.deepStrictEqual(
+      await page.evaluate(
+        viz =>
+          viz
+            .renderString("digraph { a -> b; }", { format: "xdot" })
+            .then(window.parse),
+        viz
+      ),
+      regular,
+      "Subsequent calls not setting yInvert should return the regular positions"
+    );
+  });
+
+  it("should accept nop option and produce different outputs", async function() {
+    const viz = await page.evaluateHandle(() => window.getViz());
+
+    await page.evaluate(() => {
+      window.graphSrc =
+        'digraph { a[pos="10,20"]; b[pos="12,22"]; a -> b [pos="20,20 20,20 20,20 20,20"]; }';
+    });
+
+    const regular = await page.evaluate(
+      viz => viz.renderString(graphSrc, { engine: "neato", format: "svg" }),
+      viz
+    );
+    const nop1 = await page.evaluate(
+      viz =>
+        viz.renderString(graphSrc, { engine: "neato", format: "svg", nop: 1 }),
+      viz
+    );
+
+    assert.notStrictEqual(
+      nop1,
+      regular,
+      "Nop = 1 should produce different result than default"
+    );
+
+    const nop2 = await page.evaluate(
+      viz =>
+        viz.renderString(graphSrc, { engine: "neato", format: "svg", nop: 2 }),
+      viz
+    );
+
+    assert.notStrictEqual(
+      nop2,
+      regular,
+      "Nop = 2 should produce different result than default"
+    );
+    assert.notStrictEqual(
+      nop2,
+      nop1,
+      "Nop = 2 should produce different result than Nop = 1"
+    );
+  });
+
+  it("should output SVG with correct labels", async function() {
+    const [node1Text, node2Text] = await page.evaluate(() =>
+      window.getViz().then(viz =>
+        viz
+          .renderString("digraph { a -> b; }")
+          .then(window.parseSVG)
+          .then(({ documentElement }) => [
+            documentElement.querySelector("g#node1 text").textContent,
+            documentElement.querySelector("g#node2 text").textContent,
+          ])
+      )
+    );
+
+    assert.strictEqual(node1Text, "a");
+    assert.strictEqual(node2Text, "b");
   });
 });
