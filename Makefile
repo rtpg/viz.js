@@ -9,7 +9,7 @@ EMSCRIPTEN_VERSION = 1.38.44
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
 
-CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1
+CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s FILESYSTEM=0 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker -s USE_CLOSURE_COMPILER=1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
 .PHONY: all deps debug clean clobber expat–full graphviz-full graphviz-lite
@@ -34,14 +34,15 @@ clobber: | clean
 src/render.js: src/boilerplate/module-header.txt build-full/render.js
 	sed -e s/{{VIZ_VERSION}}/$(VIZ_VERSION)/ -e s/{{EXPAT_VERSION}}/$(EXPAT_VERSION)/ -e s/{{GRAPHVIZ_VERSION}}/$(GRAPHVIZ_VERSION)/ -e s/{{EMSCRIPTEN_VERSION}}/$(EMSCRIPTEN_VERSION)/ $^ > $@
 
+build-full/render.wasm: build-full/render.js
+
 src/render.wasm: build-full/render.wasm
-	mv build-full/render.wasm src/render.wasm
+	cp build-full/render.wasm src/render.wasm
 
 build-full/render.js: src/viz.cpp
 	emcc --version | grep $(EMSCRIPTEN_VERSION)
 	emcc $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
-build-full/render.wasm: build-full/render.js
 
 $(PREFIX_FULL):
 	mkdir -p $(PREFIX_FULL)
