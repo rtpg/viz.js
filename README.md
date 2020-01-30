@@ -43,10 +43,11 @@ imports:
 ```js
 async function dot2svg(dot, options = {}) {
   const Viz = await import("@aduh95/viz.js").then(module => module.default);
-  const worker = await import("@aduh95/viz.js/worker").then(module =>
-    module.default()
+  const getWorker = await import("@aduh95/viz.js/worker").then(
+    module => module.default
   );
 
+  const worker = getWorker();
   const viz = new Viz({ worker });
 
   return viz.renderString(dot, options);
@@ -79,7 +80,7 @@ You'll also need [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com).
 On macOS:
 
 ```shell
-brew install binaryen emscripten automake libtool pkg-config qt
+brew install yarn binaryen emscripten automake libtool pkg-config qt
 ```
 
 You will certainly need to tweak config files to make sure your system knows
@@ -89,13 +90,5 @@ The build process for Viz.js is split into two parts: building the Graphviz and
 Expat dependencies, and building the rendering script files and API.
 
     make deps
-    make all
-
-## Running Tests
-
-Install the development dependencies using Yarn:
-
-```shell
-$ yarn install
-$ yarn test
-```
+    make all -j4
+    make test

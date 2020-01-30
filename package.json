@@ -30,10 +30,6 @@
     "src/render.js",
     "src/render.wasm"
   ],
-  "scripts": {
-    "build": "make",
-    "test": "mocha test"
-  },
   "contributors": [
     "Mike Daines <mdaines@fastmail.com>",
     "Antoine du Hamel <duhamelantoine1995@gmail.com>"
