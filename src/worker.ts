@@ -1,35 +1,42 @@
-const WASM_MODULE_ENTRY = "./render.js";
+import type { RenderOptions } from "./index";
 
-if ("function" === typeof importScripts) {
-  // On webworker
-  const { href } = self.location;
-  const scriptDirectory = href.substr(0, href.lastIndexOf("/") + 1);
-  importScripts(scriptDirectory + WASM_MODULE_ENTRY);
+// Emscripten "magic" globals
+declare var Module: { [functionName: string]: any };
+declare var ENVIRONMENT_IS_WORKER: boolean;
+declare var ENVIRONMENT_IS_NODE: boolean;
+
+// Worker global functions
+declare var postMessage: (data: any) => void;
+declare var addEventListener: (type: "message", data: EventListener) => void;
+
+if (ENVIRONMENT_IS_WORKER) {
   addEventListener("message", onmessage);
-} else if ("function" === typeof require) {
-  // On Node.js
+} else if (ENVIRONMENT_IS_NODE) {
   const { parentPort, isMainThread, Worker } = require("worker_threads");
   if (isMainThread) {
-    Module = {};
     module.exports = () => new Worker(__filename);
   } else {
-    Module = require(WASM_MODULE_ENTRY);
-    parentPort.on("message", data => onmessage({ data }));
+    parentPort.on("message", (data: any) =>
+      onmessage({ data } as MessageEvent)
+    );
+    // @ts-ignore
     function postMessage() {
-      return parentPort.postMessage(...arguments);
+      "use strict";
+      return parentPort.postMessage.apply(parentPort, arguments);
     }
   }
 }
 
 const wasmInitialisation = new Promise(done => {
+  "use strict";
   Module.onRuntimeInitialized = done;
 });
 
-function render(src, options) {
+function render(src: string, options: RenderOptions) {
   "use strict";
 
-  for (const file of options.files) {
-    Module.vizCreateFile(file.path, file.data);
+  for (const { path, data } of options.files) {
+    Module.vizCreateFile(path, data);
   }
 
   Module.vizSetY_invert(options.yInvert ? 1 : 0);
@@ -50,7 +57,7 @@ function render(src, options) {
   return resultString;
 }
 
-function onmessage(event) {
+function onmessage(event: MessageEvent) {
   "use strict";
   const { id, src, options } = event.data;
 
@@ -64,8 +71,8 @@ function onmessage(event) {
         e instanceof Error
           ? {
               message: e.message,
-              fileName: e.fileName,
-              lineNumber: e.lineNumber,
+              fileName: e["fileName"],
+              lineNumber: e["lineNumber"],
             }
           : { message: e.toString() };
 

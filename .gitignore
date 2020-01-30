@@ -7,6 +7,9 @@ sources/
 node_modules/
 debug/
 
+src/index.js
+src/index.mjs
+src/worker.js
 src/render.js
 src/render.wasm
 src/render.wasm.map

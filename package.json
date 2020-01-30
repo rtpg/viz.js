@@ -9,7 +9,7 @@
       "require": "./src/index.cjs",
       "import": "./src/index.mjs"
     },
-    "./worker": "./src/worker.js"
+    "./worker": "./src/render.js"
   },
   "type": "commonjs",
   "engines": {
@@ -44,7 +44,10 @@
   },
   "homepage": "https://github.com/aduh95/viz.js",
   "devDependencies": {
+    "@types/node": "^13.5.2",
     "mocha": "^7.0.0",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^2.0.0",
+    "terser": "^4.6.3",
+    "typescript": "beta"
   }
 }
