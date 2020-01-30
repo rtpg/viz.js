@@ -26,7 +26,6 @@
   "files": [
     "src/index.cjs",
     "src/index.mjs",
-    "src/worker.js",
     "src/render.js",
     "src/render.wasm"
   ],

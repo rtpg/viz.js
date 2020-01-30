@@ -19,7 +19,7 @@ BEAUTIFY?=false
 
 .PHONY: all
 # Should be kept in sync with the "files" field in package.json
-all: src/index.cjs src/index.mjs src/worker.js src/render.js src/render.wasm
+all: src/index.cjs src/index.mjs src/render.js src/render.wasm
 
 .PHONY: test
 test: all
