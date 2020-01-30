@@ -1,3 +1,0 @@
-/*
-Viz.js {{VIZ_VERSION}} (Graphviz {{GRAPHVIZ_VERSION}}, Expat {{EXPAT_VERSION}}, Emscripten {{EMSCRIPTEN_VERSION}})
-*/
