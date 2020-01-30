@@ -25,6 +25,10 @@ all: src/index.cjs src/index.mjs src/render.js src/render.wasm
 test: all
 	yarn mocha test
 
+.PHONY: publish
+publish:
+	make clean && make test -j4 && npm publish --access public
+
 .PHONY: debug
 debug:
 	$(MAKE) clean
