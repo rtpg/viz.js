@@ -1,10 +1,28 @@
 import type { Worker as NodeJSWorker } from "worker_threads";
 
+export type SerializedError = {
+  message: string;
+  lineNumber?: number;
+  fileName?: string;
+};
+type RenderRequestListener = (error: SerializedError, result?: string) => void;
+
+export type RenderRequest = {
+  id: number;
+  src: string;
+  options: RenderOptions;
+};
+export type RenderResponse = {
+  id: number;
+  error?: SerializedError;
+  result?: string;
+};
+
 class WorkerWrapper {
   private _worker: Worker | NodeJSWorker;
   private _isNodeWorker: boolean;
 
-  private _listeners = [];
+  private _listeners: RenderRequestListener[] = [];
   private _nextId = 0;
   private _executing = 0;
 
@@ -27,7 +45,7 @@ class WorkerWrapper {
   }
 
   _eventListener(event: MessageEvent) {
-    const { id, error, result } = event.data;
+    const { id, error, result } = event.data as RenderResponse;
 
     this._listeners[id](error, result);
     delete this._listeners[id];
@@ -48,8 +66,8 @@ class WorkerWrapper {
       this._listeners[id] = function(error, result) {
         if (error) {
           const e = new Error(error.message);
-          e["fileName"] = error.fileName;
-          e["lineNumber"] = error.lineNumber;
+          if (error.fileName) (e as any).fileName = error.fileName;
+          if (error.lineNumber) (e as any).lineNumber = error.lineNumber;
           return reject(e);
         }
         resolve(result);
@@ -108,7 +126,7 @@ class Viz {
   }
 
   renderString(
-    src,
+    src: string,
     {
       format = "svg",
       engine = "dot",
@@ -137,7 +155,7 @@ class Viz {
     });
   }
 
-  renderJSONObject(src, options = {} as RenderOptions) {
+  renderJSONObject(src: string, options = {} as RenderOptions) {
     let { format } = options;
 
     if (!format.startsWith("json")) {

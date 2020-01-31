@@ -1,4 +1,9 @@
-import type { RenderOptions } from "./index";
+import type {
+  RenderOptions,
+  SerializedError,
+  RenderResponse,
+  RenderRequest,
+} from "./index";
 
 // Emscripten "magic" globals
 declare var Module: { [functionName: string]: any };
@@ -6,7 +11,7 @@ declare var ENVIRONMENT_IS_WORKER: boolean;
 declare var ENVIRONMENT_IS_NODE: boolean;
 
 // Worker global functions
-declare var postMessage: (data: any) => void;
+declare var postMessage: (data: RenderResponse) => void;
 declare var addEventListener: (type: "message", data: EventListener) => void;
 
 if (ENVIRONMENT_IS_WORKER) {
@@ -16,7 +21,7 @@ if (ENVIRONMENT_IS_WORKER) {
   if (isMainThread) {
     module.exports = () => new Worker(__filename);
   } else {
-    parentPort.on("message", (data: any) =>
+    parentPort.on("message", (data: RenderResponse) =>
       onmessage({ data } as MessageEvent)
     );
     // @ts-ignore
@@ -59,7 +64,7 @@ function render(src: string, options: RenderOptions) {
 
 function onmessage(event: MessageEvent) {
   "use strict";
-  const { id, src, options } = event.data;
+  const { id, src, options } = event.data as RenderRequest;
 
   wasmInitialisation
     .then(() => {
@@ -67,12 +72,12 @@ function onmessage(event: MessageEvent) {
       postMessage({ id, result });
     })
     .catch(e => {
-      const error =
+      const error: SerializedError =
         e instanceof Error
           ? {
               message: e.message,
-              fileName: e["fileName"],
-              lineNumber: e["lineNumber"],
+              fileName: (e as any).fileName,
+              lineNumber: (e as any).lineNumber,
             }
           : { message: e.toString() };
 
