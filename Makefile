@@ -24,6 +24,8 @@ all: src/index.cjs src/index.mjs src/index.d.ts src/render.js src/render.wasm
 .PHONY: test
 test: all
 	yarn mocha test
+	# Deno test don't pass, skipping
+	# deno --importmap test/deno-files/importmap.json test/deno.ts
 
 .PHONY: publish
 publish:

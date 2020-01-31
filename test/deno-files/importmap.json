@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "std::testing": "https://deno.land/std/testing/mod.ts",
+    "@aduh95/viz.js": "../../src/index.mjs",
+    "@aduh95/viz.js/types": "../../src/index.d.ts",
+    "@aduh95/viz.js/worker": "./worker.js",
+    "node": "./node.d.ts"
+  }
+}
