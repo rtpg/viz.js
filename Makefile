@@ -19,7 +19,7 @@ BEAUTIFY?=false
 
 .PHONY: all
 # Should be kept in sync with the "files" field in package.json
-all: src/index.cjs src/index.mjs src/render.js src/render.wasm
+all: src/index.cjs src/index.mjs src/index.d.ts src/render.js src/render.wasm
 
 .PHONY: test
 test: all
@@ -43,17 +43,20 @@ deps: expat-full graphviz-full
 clean:
 	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -f build-full/render.js build-full/render.wasm
-	rm -f src/render.js src/render.wasm src/index.js src/index.mjs
+	rm -f src/render.js src/render.wasm src/index.js src/index.mjs src/index.d.ts
 
 .PHONY: clobber
 clobber: | clean
 	rm -rf build-main build-full build-lite $(PREFIX_FULL) $(PREFIX_LITE)
 
 src/worker.js: src/worker.ts
-	yarn tsc --lib esnext,WebWorker -m es6 --target es5 $^
+	yarn tsc --lib esnext,WebWorker -m es6 --target es6 $^
 
 src/index.js: src/index.ts
-	yarn tsc --lib esnext,WebWorker -m es6 --target esnext $^
+	yarn tsc --lib esnext,WebWorker -m es6 --target esnext -d $^
+
+src/index.d.ts: src/index.ts
+	yarn tsc --lib esnext,WebWorker -d --emitDeclarationOnly $^
 
 src/index.mjs: src/index.js
 	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@

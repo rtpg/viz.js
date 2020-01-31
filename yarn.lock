@@ -8,18 +8,25 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aduh95/viz.js@workspace:."
   dependencies:
-    "@types/node": ^13.5.2
+    "@types/node": ^13.5.3
     mocha: ^7.0.0
     puppeteer: ^2.0.0
     terser: ^4.6.3
-    typescript: beta
+    typescript: ^3.8.0-beta
   languageName: unknown
   linkType: soft
 
-"@types/node@npm:^13.5.2":
-  version: 13.5.2
-  resolution: "@types/node@npm:13.5.2"
-  checksum: 358d6ba71c351acb5e76a6818098cf493dd1f603398f7e204d2db4d1dc2b6c3c61962228e431e8b0671d8a3dfcebc7c0751ff8f29e960ea313e4bd6bc424f4da
+"@types/mime-types@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@types/mime-types@npm:2.1.0"
+  checksum: a115bafb5b1c8f1c4d3824be95dc0a9a7fe33afd33c0402e61a6cb1faf3780762195d97ca9fcd7f3ddcd0772279359fe925d602a695f7fc4aed18ecc4dfe4ccc
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^13.5.3":
+  version: 13.5.3
+  resolution: "@types/node@npm:13.5.3"
+  checksum: 7e41d8b57ccd8f4a6607baf5115b07052273d6c669bf463781e9f078fc7fe2df6a4ea6b8e0e1922cc2985983921700a00a1fea709e6ba4b8230c0b186503c318
   languageName: node
   linkType: hard
 
@@ -30,12 +37,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"agent-base@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "agent-base@npm:4.3.0"
-  dependencies:
-    es6-promisify: ^5.0.0
-  checksum: dc92d455111af017c831f28584fe53298907b07cb5102307e8e89385ff8af2fb452a7510befd528929d800f12a91f8da6eec530cd8cf826622f04ba2f52d74bb
+"agent-base@npm:5":
+  version: 5.1.1
+  resolution: "agent-base@npm:5.1.1"
+  checksum: 912f521d3fdf32bdc532fa6a80665d78bcc4f0f22d5228a72283ca6f345e4973ec507c93f5f97413c8fbc110c3a57bb2d1a6b61ae7b52cb580a0ca88f9f0021d
   languageName: node
   linkType: hard
 
@@ -376,7 +381,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:3.2.6, debug@npm:^3.1.0":
+"debug@npm:3.2.6":
   version: 3.2.6
   resolution: "debug@npm:3.2.6"
   dependencies:
@@ -385,7 +390,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^4.1.0":
+"debug@npm:4, debug@npm:^4.1.0":
   version: 4.1.1
   resolution: "debug@npm:4.1.1"
   dependencies:
@@ -456,8 +461,8 @@ __metadata:
   linkType: hard
 
 "es-abstract@npm:^1.17.0-next.1":
-  version: 1.17.3
-  resolution: "es-abstract@npm:1.17.3"
+  version: 1.17.4
+  resolution: "es-abstract@npm:1.17.4"
   dependencies:
     es-to-primitive: ^1.2.1
     function-bind: ^1.1.1
@@ -470,7 +475,7 @@ __metadata:
     object.assign: ^4.1.0
     string.prototype.trimleft: ^2.1.1
     string.prototype.trimright: ^2.1.1
-  checksum: 8a88725e2348a7ffdd5ffcd81767c601cc289b1f376bb7746a1b99f7419f8447f0b4cc46961da390681e162d5826ee5782693f43f7abd4f1e30f01b4ddb01e37
+  checksum: 9282a308badec96204370c1077f2858f40117c0c3350ae3522b316970f3cab896b9573297bec9f357225541a97106f369735a5553bc007c0cbd3958fb34166a3
   languageName: node
   linkType: hard
 
@@ -482,22 +487,6 @@ __metadata:
     is-date-object: ^1.0.1
     is-symbol: ^1.0.2
   checksum: 8c38fb003ba9ce399f4a782505a49fdcf16182c03b8809ae57d0ef983ed8cf2713473af869e747cd4375ccacbad8790a49cbb3b372631d28a3b5bbc617f0685e
-  languageName: node
-  linkType: hard
-
-"es6-promise@npm:^4.0.3":
-  version: 4.2.8
-  resolution: "es6-promise@npm:4.2.8"
-  checksum: 9024a7f90dc540834e2602ddd18bd71c8e93effa7017dcd500aa3dcdc89c7e6ee18e601596ed4735ce52564c31c91ad1004dd0d94fe61a5d44fd3703803c4c06
-  languageName: node
-  linkType: hard
-
-"es6-promisify@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "es6-promisify@npm:5.0.0"
-  dependencies:
-    es6-promise: ^4.0.3
-  checksum: 29b695ea7003688c7908fcb5cdeb80c83667c89bce8f99889f193e82876339e4356384feeac58b72df686284de528751b0e8cea2bc26ccac009def1a3ba9b489
   languageName: node
   linkType: hard
 
@@ -698,7 +687,7 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-"glob@npm:7.1.3":
+"glob@npm:7.1.3, glob@npm:^7.1.3":
   version: 7.1.3
   resolution: "glob@npm:7.1.3"
   dependencies:
@@ -712,7 +701,7 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-"glob@npm:^7.1.3, glob@npm:^7.1.4":
+"glob@npm:^7.1.4":
   version: 7.1.6
   resolution: "glob@npm:7.1.6"
   dependencies:
@@ -807,13 +796,13 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^3.0.0":
-  version: 3.0.1
-  resolution: "https-proxy-agent@npm:3.0.1"
+"https-proxy-agent@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "https-proxy-agent@npm:4.0.0"
   dependencies:
-    agent-base: ^4.3.0
-    debug: ^3.1.0
-  checksum: dbd4091db0110f23b92123070dc6abc525952459aab4674d7dad1cbb98fa8da5f3f9d9a0e76aea0b24f65a4802bf4f2136fe226880331d3b9546778cf406702f
+    agent-base: 5
+    debug: 4
+  checksum: 2f9d4fd7e0e15fdd30d2d3e77636f106194714cb4042cd498b9cd4aac3ca04dba2e970ab5f5d0fc36d6e63f3fde327057ba62c6b047d18b6657994245498dae9
   languageName: node
   linkType: hard
 
@@ -1034,7 +1023,7 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-"mime-types@npm:^2.1.12, mime-types@npm:~2.1.19":
+"mime-types@npm:^2.1.12, mime-types@npm:^2.1.25, mime-types@npm:~2.1.19":
   version: 2.1.26
   resolution: "mime-types@npm:2.1.26"
   dependencies:
@@ -1099,8 +1088,8 @@ fsevents@~2.1.1:
   linkType: hard
 
 "mocha@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "mocha@npm:7.0.0"
+  version: 7.0.1
+  resolution: "mocha@npm:7.0.1"
   dependencies:
     ansi-colors: 3.2.3
     browser-stdout: 1.3.1
@@ -1127,9 +1116,9 @@ fsevents@~2.1.1:
     yargs-parser: 13.1.1
     yargs-unparser: 1.6.0
   bin:
-    _mocha: ./bin/_mocha
-    mocha: ./bin/mocha
-  checksum: f1a1fe9db783bc77feb0fbefdd30c826e7bc01cbd07510aec6ac742733f11f6dfe6825e9e9af95501caf42aa5c23a6cb53fb061b41ab4baf7b2a00684d2577af
+    _mocha: bin/_mocha
+    mocha: bin/mocha
+  checksum: ee24e9f9abe09d0ae0a919204c575ff05b5a9d5bdb4d85dd37c75c466c45291d5dbbb8f57020b1cbdb7fa87ec6fffe992143a1450b9d1741009031223f9aecae
   languageName: node
   linkType: hard
 
@@ -1140,17 +1129,10 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-"ms@npm:2.1.1":
+"ms@npm:2.1.1, ms@npm:^2.1.1":
   version: 2.1.1
   resolution: "ms@npm:2.1.1"
   checksum: f6a582361bde460587db401d7c9ede3bfe00a2fbf3f02b4e230343ef7385263280eb4b6c86e28dc2a17d321225fceb606591b84b20b770e4e7e03d6f1d27eaab
-  languageName: node
-  linkType: hard
-
-"ms@npm:^2.1.1":
-  version: 2.1.2
-  resolution: "ms@npm:2.1.2"
-  checksum: 2a3d955e5199024d4b18630ff47c21b52703a5e892615ae233486b8108f26b5493736009754263eebae765ab79d6e20327dad6e52d7843b689d404245e286549
   languageName: node
   linkType: hard
 
@@ -1409,18 +1391,20 @@ fsevents@~2.1.1:
   linkType: hard
 
 "puppeteer@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "puppeteer@npm:2.0.0"
+  version: 2.1.0
+  resolution: "puppeteer@npm:2.1.0"
   dependencies:
+    "@types/mime-types": ^2.1.0
     debug: ^4.1.0
     extract-zip: ^1.6.6
-    https-proxy-agent: ^3.0.0
+    https-proxy-agent: ^4.0.0
     mime: ^2.0.3
+    mime-types: ^2.1.25
     progress: ^2.0.1
     proxy-from-env: ^1.0.0
     rimraf: ^2.6.1
     ws: ^6.1.0
-  checksum: e5008e55e9bbcfea19a83e5ee3df3525df7e62e39e2dd47c1d0bc7f48f29d93c9962b0b9435ad0059a88eeea130e64d57f02b93f1b999fdb40db9b632207996a
+  checksum: f699bdeca10a3b5d34d975896229bd6c65d2225998132657d74c77da712e19e2b7241945d7d963dbec4b97027f7547b9fe7ca7b5b8cd522a0791fdfdc2070287
   languageName: node
   linkType: hard
 
@@ -1773,23 +1757,23 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-typescript@beta:
-  version: 3.8.0-beta
-  resolution: "typescript@npm:3.8.0-beta"
+typescript@^3.8.0-beta:
+  version: 3.8.0-dev.20200131
+  resolution: "typescript@npm:3.8.0-dev.20200131"
   bin:
-    tsc: ./bin/tsc
-    tsserver: ./bin/tsserver
-  checksum: f629ee2e746102e48b99d0d211589eac579f4baac4d37e412ec39658d84e88316b270694d8c0f38f74d49ee8af078a36653d2e5b6990e8b74b199ec6060a903a
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 4a3a7b11f12b4cbea8e4aea53c7e7673f46d54d5c6eecf22e6531db0d132d30e4d2b18dcad2c1165a6bed4e4d9c8135399da161682ea78c78b3c1215cf8518d8
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@beta#builtin<compat/typescript>":
-  version: 3.8.0-beta
-  resolution: "typescript@patch:typescript@npm%3A3.8.0-beta#builtin<compat/typescript>::version=3.8.0-beta&hash=226bd1"
+"typescript@patch:typescript@^3.8.0-beta#builtin<compat/typescript>":
+  version: 3.8.0-dev.20200131
+  resolution: "typescript@patch:typescript@npm%3A3.8.0-dev.20200131#builtin<compat/typescript>::version=3.8.0-dev.20200131&hash=226bd1"
   bin:
-    tsc: ./bin/tsc
-    tsserver: ./bin/tsserver
-  checksum: ed4efd05468b86237bcb952b787031e7600250dcf5fb8798f7fb9598be2b3905a20676fdc939675d6d19cbe094ffb16244b79f0f13e2fabf70cdd76901cb7e35
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 5e4119b519d17f0c963f5abe632e326c3f11ea4e9544c51616025b2f9848c2e66bafee272b030a536328f81408c405e5c426a2fecedc8cad467b7f5a14ed9fb4
   languageName: node
   linkType: hard
 

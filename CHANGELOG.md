@@ -9,6 +9,7 @@
   either `worker` or `workerURL` on the `Viz` constructor).
 - **BREAKING:** Remove _lite_ version, Viz.js now comes in only one variant.
 - Add support for Node.js `worker_threads`.
+- Typescript integration
 - Use ES modules and WebAssembly (if you need support for ES5 or asm.js, you
   would need to transpile it yourself or use an older version).
 - Refactor `viz.c` to C++ to use

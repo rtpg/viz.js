@@ -4,6 +4,7 @@
   "description": "A hack to put Graphviz on the web.",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
+  "types": "./src/index.d.ts",
   "exports": {
     ".": {
       "require": "./src/index.cjs",
@@ -24,6 +25,7 @@
     "emscripten"
   ],
   "files": [
+    "src/index.d.ts",
     "src/index.cjs",
     "src/index.mjs",
     "src/render.js",
@@ -39,10 +41,10 @@
   },
   "homepage": "https://github.com/aduh95/viz.js",
   "devDependencies": {
-    "@types/node": "^13.5.2",
+    "@types/node": "^13.5.3",
     "mocha": "^7.0.0",
     "puppeteer": "^2.0.0",
     "terser": "^4.6.3",
-    "typescript": "beta"
+    "typescript": "^3.8.0-beta"
   }
 }
