@@ -56,15 +56,39 @@ async function dot2svg(dot, options = {}) {
 
 ### Browsers
 
-In a world where Import Maps and `import.meta.resolve` are reality, you could
-have something like that:
+You can either use the `worker` or the `workerURL` on the constructor.
 
 ```js
-import Viz from "@aduh95/viz.js";
+import Viz from "/node_modules/@aduh95/viz.js/src/index.mjs";
+
+const workerURL = "/node_modules/@aduh95/viz.js/src/render.js";
+```
+
+If you are using a CDN or loading the files from a different origin, most
+browsers will block you from spawning a cross-origin webworker. There is a
+workaround:
+
+```js
+import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.2/src/index.mjs";
+
+const workerURL = URL.createObjectURL(
+  new Blob(
+    [
+      "self.Module =",
+      "{ locateFile: file =>",
+      '"https://unpkg.com/@aduh95/viz.js@3.0.0-beta.2/src/"',
+      "+ file",
+      "};", // Module.locateFile let the worker resolve the wasm file URL
+      "importScripts(", // importScripts is not restricted by same-origin policy
+      "Module.locateFile(", // We can use it to load the JS file
+      '"render.js"',
+      "));",
+    ],
+    { type: "application/javascript" }
+  )
+);
 
 async function dot2svg(dot, options) {
-  const workerURL = await import.meta.resolve("@aduh95/viz.js/worker");
-
   const viz = new Viz({ workerURL });
 
   return viz.renderString(dot, options);
