@@ -70,12 +70,14 @@ dist/index.d.ts: src/index.ts
 
 dist/index.mjs: dist/index.js
 	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
+	rm $^
 
 dist/index.cjs: src/index.cjs
 	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
 
 dist/render.js: build-full/render.js dist/worker.js
 	yarn terser -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
+	rm dist/worker.js
 
 build-full/render.wasm: build-full/render.js
 
