@@ -122,21 +122,37 @@ describe("Test graph rendering using web browser", function() {
     );
   });
 
-  it("after throwing an exception on invalid input with an incomplete quoted string, continue to throw exceptions on valid input", async function() {
+  it("able to recover after throwing exceptions on invalid input", async function() {
     const viz = await page.evaluateHandle(() => window.getViz());
 
     await assert.rejects(
       page.evaluate(
         viz => viz.renderString('digraph {\n a -> b [label="erroneous]\n}'),
         viz
-      )
+      ),
+      /syntax error in line 2/
+    );
+    await assert.rejects(
+      page.evaluate(
+        viz => viz.renderString('digraph {\n a -> \n[label="erroneous]\n}'),
+        viz
+      ),
+      /syntax error in line 3/
     );
 
-    await assert.rejects(
+    await assert.doesNotReject(
       page.evaluate(
         viz => viz.renderString('digraph {\n a -> b [label="correcteous"]\n}'),
         viz
       )
+    );
+    await assert.rejects(
+      page.evaluate(viz => viz.renderString("digraph { a -> "), viz),
+      /syntax error in line 1/
+    );
+
+    await assert.doesNotReject(
+      page.evaluate(viz => viz.renderString("digraph { a -> b }"), viz)
     );
   });
 

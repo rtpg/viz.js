@@ -13,16 +13,17 @@ extern gvplugin_library_t gvplugin_dot_layout_LTX_library;
 extern gvplugin_library_t gvplugin_neato_layout_LTX_library;
 #endif
 
-char *errorMessage = NULL;
+static std::string errorMessages;
 
 int vizErrorf(char *buf) {
-  errorMessage = buf;
+  errorMessages.append(buf);
   return 0;
 }
 
 std::string vizLastErrorMessage() {
-  if (errorMessage == NULL) return "";
-  std::string str(errorMessage);
+  if (agreseterrors() == 0) return "";
+  std::string str(errorMessages);
+  errorMessages.clear();
   return str;
 }
 

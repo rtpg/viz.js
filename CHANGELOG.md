@@ -15,6 +15,10 @@
 - Refactor `viz.c` to C++ to use
   [Emscripten's Embind](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html).
 - Use `ALLOW_MEMORY_GROW` compiler option to avoid failing on large graphs.
+- Improve error handling:
+  - Rejects with the full error string from Graphviz.
+  - Remove the need of creating new instances when render fails by resetting
+    internal error state.
 - Upgrade deps:
   - Upgrade Emscripten to 1.38.44
   - Upgrade Graphviz to 2.43.x (unstable)
