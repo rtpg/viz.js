@@ -1,9 +1,9 @@
-import type {
+import {
   RenderOptions,
   SerializedError,
   RenderResponse,
   RenderRequest,
-} from "./index";
+} from "./types";
 
 // Emscripten "magic" globals
 declare var Module: { [functionName: string]: any };

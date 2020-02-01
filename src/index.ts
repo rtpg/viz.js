@@ -1,22 +1,7 @@
 import type { Worker as NodeJSWorker } from "worker_threads";
+import type { RenderRequestListener, RenderResponse } from "./types";
 
-export type SerializedError = {
-  message: string;
-  lineNumber?: number;
-  fileName?: string;
-};
-type RenderRequestListener = (error: SerializedError, result?: string) => void;
 
-export type RenderRequest = {
-  id: number;
-  src: string;
-  options: RenderOptions;
-};
-export type RenderResponse = {
-  id: number;
-  error?: SerializedError;
-  result?: string;
-};
 
 class WorkerWrapper {
   private _worker: Worker | NodeJSWorker;
@@ -55,7 +40,7 @@ class WorkerWrapper {
     }
   }
 
-  render(src: string, options: RenderOptions) {
+  render(src: string, options: RenderOptions): Promise<string> {
     return new Promise((resolve, reject) => {
       let id = this._nextId++;
 
@@ -78,22 +63,21 @@ class WorkerWrapper {
   }
 }
 
-export type VizConstructorOptions = {
-  workerURL?: string;
-  worker?: Worker | NodeJSWorker;
-};
+type VizConstructorOptionsWorkerURL = { workerURL: string };
+type VizConstructorOptionsWorker = { worker: Worker | NodeJSWorker };
+export type VizConstructorOptions =
+  | VizConstructorOptionsWorkerURL
+  | VizConstructorOptionsWorker;
 
-export type Image = {
+type Image = {
   path: string;
   height: string | number;
   width: string | number;
 };
-
-export type File = {
+type File = {
   path: string;
   data: string;
 };
-
 export type RenderOptions = {
   engine?: "circo" | "dot" | "fdp" | "neato" | "osage" | "twopi";
   format?:
@@ -111,20 +95,43 @@ export type RenderOptions = {
   files?: File[];
   nop: number;
 };
+export type GraphvizJSONOutput = {
+  name: string;
+  directed: boolean;
+  strict: boolean;
+  _subgraph_cnt: number;
+  objects?: GraphvizJSONOutput[];
+  [key: string]: any;
+};
 
 class Viz {
   private _wrapper: WorkerWrapper;
 
-  constructor({ workerURL, worker } = {} as VizConstructorOptions) {
-    if (typeof workerURL !== "undefined") {
-      this._wrapper = new WorkerWrapper(new Worker(workerURL));
-    } else if (typeof worker !== "undefined") {
-      this._wrapper = new WorkerWrapper(worker);
+  constructor(options = {} as VizConstructorOptions) {
+    if (
+      typeof (options as VizConstructorOptionsWorkerURL).workerURL !==
+      "undefined"
+    ) {
+      this._wrapper = new WorkerWrapper(
+        new Worker((options as VizConstructorOptionsWorkerURL).workerURL)
+      );
+    } else if (
+      typeof (options as VizConstructorOptionsWorker).worker !== "undefined"
+    ) {
+      this._wrapper = new WorkerWrapper(
+        (options as VizConstructorOptionsWorker).worker
+      );
     } else {
       throw new Error("Must specify workerURL or worker option.");
     }
   }
 
+  /**
+   * Renders a DOT graph to the specified format
+   * @param src DOT representation of the graph to render.
+   * @param options Options for the rendering engine.
+   * @returns Raw output of Graphviz as a string.
+   */
   renderString(
     src: string,
     {
@@ -135,7 +142,7 @@ class Viz {
       yInvert = false,
       nop = 0,
     } = {} as RenderOptions
-  ) {
+  ): Promise<string> {
     for (const { path, width, height } of images) {
       files.push({
         path,
@@ -155,10 +162,21 @@ class Viz {
     });
   }
 
-  renderJSONObject(src: string, options = {} as RenderOptions) {
+  /**
+   * Renders the graph as a JSON object.
+   * @param src DOT representation of the graph to render
+   * @param options Options for the rendering engine. `format` is ignored,
+   *                unless it is json or json0.
+   * @returns Parsed JSON object from Graphviz.
+   * @see https://graphviz.gitlab.io/_pages/doc/info/output.html#d:json
+   */
+  renderJSONObject(
+    src: string,
+    options = {} as RenderOptions
+  ): Promise<GraphvizJSONOutput> {
     let { format } = options;
 
-    if (!format.startsWith("json")) {
+    if (!format || !format.startsWith("json")) {
       format = "json";
     }
 
