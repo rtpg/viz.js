@@ -35,7 +35,7 @@ void vizCreateFile(std::string path, std::string data) {
   EM_ASM(({
     var path = UTF8ToString($0);
     var data = UTF8ToString($1);
-    
+
     FS.createPath("/", PATH.dirname(path));
     FS.writeFile(PATH.join("/", path), data);
   }), path.c_str(), data.c_str());
@@ -53,7 +53,7 @@ std::string vizRenderFromString(std::string src, std::string format, std::string
   char *output = NULL;
   std::string result;
   unsigned int length;
-  
+
   context = gvContext();
   gvAddLibrary(context, &gvplugin_core_LTX_library);
   gvAddLibrary(context, &gvplugin_dot_layout_LTX_library);
@@ -63,24 +63,24 @@ std::string vizRenderFromString(std::string src, std::string format, std::string
 
   agseterr(AGERR);
   agseterrf(vizErrorf);
-  
+
   agreadline(1);
-  
+
   while ((graph = agmemread(input))) {
     if (output == NULL) {
       gvLayout(context, graph, engine.c_str());
       gvRenderData(context, graph, format.c_str(), &output, &length);
       gvFreeLayout(context, graph);
     }
-    
+
     agclose(graph);
-    
+
     input = "";
   }
 
   result.assign(output, length);
-  free(output);
-  
+  gvFreeRenderData(output);
+
   return result;
 }
 
