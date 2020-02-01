@@ -2,16 +2,48 @@
 
 ### @aduh95/Viz.js v3.0.0 (unreleased)
 
+##### Notable changes
+
+- The library is now compiled to WASM, which shrinks the file size (Viz.js
+  (2.1.2 full version) brotlified: 409K; @aduh95/viz.js (3.0.0-beta.3)
+  brotlified: 371K), should improve performances, allows dynamic memory growth.
+- The library is able to reset its internal error state, which makes the
+  [v2 wiki caveat](https://github.com/mdaines/viz.js/wiki/Caveats#rendering-graphs-with-user-input)
+  unnecessary.
+- Rendering from main thread is no longer supported, you must use a worker
+  (webworker or worker_thread).
+- The JS code is now transpiled from TypeScript, and typings are packed within
+  the npm package. You can find the API documentation there!
+
+##### Breaking changes and deprecations
+
 - **BREAKING:** Bump required version of Node.js to v12 LTS (might work on v10
-  using CLI flags).
-- **BREAKING:** Limit the API to `renderString` and `renderJSON`.
-- **BREAKING:** Remove support for non-worker environment (you must now specify
-  either `worker` or `workerURL` on the `Viz` constructor).
+  LTS using CLI flags).
+- **BREAKING:** Remove `Viz.prototype.renderSVGElement`. You can use
+  `renderString` and `DOMParser` to achieve the same result.
+- **BREAKING:** Remove `Viz.prototype.renderImageElement`. You can use
+  `renderString` and `Canvas` to achieve the same result.
+- **BREAKING:** Remove `Module` and `render` from `Viz` constructor's options
+  (you must now specify either `worker` or `workerURL`).
 - **BREAKING:** Remove _lite_ version, Viz.js now comes in only one variant.
+- **BREAKING:** The `render.js` file (that replaces `full.render.js`) exports a
+  worker_thread factory. It's available through `@aduh95/viz.js/worker` on
+  Node.js and bundle tools that support `package.json`#`exports`.
+- **BREAKING:** Compiles to WebAssembly, which cannot be bundled in the
+  `render.js` file like asm.js used to. Depending on your bundling tool, you may
+  need some extra config to make everything work.
+- **BREAKING:** Remove ES5 and CJS dist files, all modern browsers now support
+  ES2015 modules. If you want to support an older browser, you would need to
+  transpile it yourself or use an older version.
+- **BREAKING:** On Node.js, `require('@aduh95/viz.js')` returns now a
+  `Promise<Viz>`.
+- **DEPRECATED:** `require('@aduh95/viz.js')` is deprecated, use
+  `import('@aduh95/viz.js')` instead.
+
+##### Added features
+
 - Add support for Node.js `worker_threads`.
-- Typescript integration
-- Use ES modules and WebAssembly (if you need support for ES5 or asm.js, you
-  would need to transpile it yourself or use an older version).
+- Refactor JS files to Typescript.
 - Refactor `viz.c` to C++ to use
   [Emscripten's Embind](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html).
 - Use `ALLOW_MEMORY_GROW` compiler option to avoid failing on large graphs.
@@ -19,6 +51,7 @@
   - Rejects with the full error string from Graphviz.
   - Remove the need of creating new instances when render fails by resetting
     internal error state.
+- Switch to Mocha and Puppeteer for browser testing.
 - Upgrade deps:
   - Upgrade Emscripten to 1.38.44
   - Upgrade Graphviz to 2.43.x (unstable)
