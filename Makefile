@@ -1,5 +1,6 @@
 PREFIX_FULL = $(abspath ./prefix-full)
 PREFIX_LITE = $(abspath ./prefix-lite)
+DIST_FOLDER = $(abspath ./dist)
 
 VIZ_VERSION = $(shell node -p "require('./package.json').version")
 EXPAT_VERSION = 2.2.9
@@ -12,14 +13,15 @@ GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker -s USE_CLOSURE_COMPILER=1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
+TS_FLAGS = --lib esnext,WebWorker --outDir $(DIST_FOLDER)
+
 PREAMBLE = "/**\n\
  * Viz.js $(VIZ_VERSION) (Graphviz $(GRAPHVIZ_VERSION), Expat $(EXPAT_VERSION), Emscripten $(EMSCRIPTEN_VERSION))\n\
  */"
 BEAUTIFY?=false
 
 .PHONY: all
-# Should be kept in sync with the "files" field in package.json
-all: src/index.cjs src/index.mjs src/index.d.ts src/render.js src/render.wasm
+all: dist dist/index.cjs dist/index.mjs dist/index.d.ts dist/render.js dist/render.wasm
 
 .PHONY: test
 test: all
@@ -29,7 +31,10 @@ test: all
 
 .PHONY: publish
 publish:
-	make clean && make test -j4 && npm publish --access public
+	make clean
+	make test -j4
+	tar -cJf sources/viz.js-v$(VIZ_VERSION).tar.xz dist/
+	npm publish --access public
 
 .PHONY: debug
 debug:
@@ -45,31 +50,37 @@ deps: expat-full graphviz-full
 clean:
 	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -f build-full/render.js build-full/render.wasm
-	rm -f src/render.js src/render.wasm src/index.js src/index.mjs src/index.d.ts
+	rm -rf dist
 
 .PHONY: clobber
 clobber: | clean
 	rm -rf build-main build-full build-lite $(PREFIX_FULL) $(PREFIX_LITE)
 
-src/worker.js: src/worker.ts
-	yarn tsc --lib esnext,WebWorker -m es6 --target es6 $^
+dist:
+	mkdir -p $(DIST_FOLDER)
 
-src/index.js: src/index.ts
-	yarn tsc --lib esnext,WebWorker -m es6 --target esnext -d $^
+dist/worker.js: src/worker.ts
+	yarn tsc $(TS_FLAGS) -m es6 --target es6 $^
 
-src/index.d.ts: src/index.ts
-	yarn tsc --lib esnext,WebWorker -d --emitDeclarationOnly $^
+dist/index.js: src/index.ts
+	yarn tsc $(TS_FLAGS) -m es6 --target esnext -d $^
 
-src/index.mjs: src/index.js
+dist/index.d.ts: src/index.ts
+	yarn tsc $(TS_FLAGS) -d --emitDeclarationOnly $^
+
+dist/index.mjs: dist/index.js
 	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
 
-src/render.js: build-full/render.js src/worker.js
+dist/index.cjs: src/index.cjs
+	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
+
+dist/render.js: build-full/render.js dist/worker.js
 	yarn terser -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
 
 build-full/render.wasm: build-full/render.js
 
-src/render.wasm: build-full/render.wasm
-	cp build-full/render.wasm src/render.wasm
+dist/render.wasm: build-full/render.wasm
+	cp $^ $@
 
 build-full/render.js: src/viz.cpp
 	emcc --version | grep $(EMSCRIPTEN_VERSION)

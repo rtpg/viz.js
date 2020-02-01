@@ -7,11 +7,4 @@ sources/
 node_modules/
 debug/
 
-src/index.js
-src/index.d.ts
-src/index.mjs
-src/worker.js
-src/render.js
-src/render.wasm
-src/render.wasm.map
-src/render.wast
+dist/

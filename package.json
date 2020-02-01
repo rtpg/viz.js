@@ -2,15 +2,15 @@
   "name": "@aduh95/viz.js",
   "version": "3.0.0-beta.2",
   "description": "A hack to put Graphviz on the web.",
-  "main": "./src/index.mjs",
-  "module": "./src/index.mjs",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "require": "./src/index.cjs",
-      "import": "./src/index.mjs"
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs"
     },
-    "./worker": "./src/render.js"
+    "./worker": "./dist/render.js"
   },
   "type": "commonjs",
   "engines": {
@@ -25,11 +25,7 @@
     "emscripten"
   ],
   "files": [
-    "src/index.d.ts",
-    "src/index.cjs",
-    "src/index.mjs",
-    "src/render.js",
-    "src/render.wasm"
+    "dist/"
   ],
   "contributors": [
     "Mike Daines <mdaines@fastmail.com>",

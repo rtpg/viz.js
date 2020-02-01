@@ -22,7 +22,11 @@ const requestListener = async (req, res) => {
     if (req.url === "/") {
       res.setHeader("Content-Type", "text/html");
       createReadStream(path.join(__dirname, "index.html")).pipe(res);
-    } else if ((await runtimeModules).includes(req.url.substring(1))) {
+    } else if (
+      (await runtimeModules).find(distFile =>
+        req.url.substring(1).startsWith(distFile)
+      )
+    ) {
       const mime = `application/${
         req.url.endsWith("wasm") ? "wasm" : "javascript"
       }`;
