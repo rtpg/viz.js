@@ -416,4 +416,19 @@ describe("Test graph rendering using web browser", function() {
       "200px",
     ]);
   });
+
+  it("can render JSON objects", async function() {
+    const result = await page.evaluate(() =>
+      window.getViz().then(viz => viz.renderJSONObject("digraph { 1 -> 2 }"))
+    );
+
+    const keys = Object.keys(result);
+
+    assert(
+      ["name", "directed", "strict", "_subgraph_cnt"].every(key =>
+        keys.includes(key)
+      ),
+      "renderJSONObject should contain required keys"
+    );
+  });
 });
