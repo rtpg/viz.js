@@ -1,10 +1,13 @@
+const { name, exports } = require("../package.json");
+const path = require("path");
+
+const importURL = path.join(__dirname, "..", exports["."].import);
+
 function emitWarning() {
   if (!emitWarning.warned) {
     emitWarning.warned = true;
     const deprecation = new Error(
-      `Requiring '${
-        require("../package.json").name
-      }' package is deprecated, please use import instead.`
+      `Requiring '${name}' package is deprecated, please use import instead.`
     );
     deprecation.name = "DeprecationWarning";
 
@@ -13,4 +16,4 @@ function emitWarning() {
 }
 
 emitWarning();
-module.exports = import("./index.mjs").then(module => module.default);
+module.exports = import(importURL).then(module => module.default);
