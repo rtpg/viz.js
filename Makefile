@@ -21,7 +21,7 @@ PREAMBLE = "/**\n\
 BEAUTIFY?=false
 
 .PHONY: all
-all: dist dist/index.cjs dist/index.mjs dist/index.d.ts dist/render.js dist/render.wasm
+all: dist dist/index.cjs dist/index.mjs dist/index.d.ts dist/render.js dist/render.wasm worker
 
 .PHONY: test
 test: all
@@ -51,6 +51,7 @@ clean:
 	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -f build-full/render.js build-full/render.wasm
 	rm -rf dist
+	rm worker
 
 .PHONY: clobber
 clobber: | clean
@@ -58,6 +59,9 @@ clobber: | clean
 
 dist:
 	mkdir -p $(DIST_FOLDER)
+
+worker:
+	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
 dist/worker.js: src/worker.ts
 	yarn tsc $(TS_FLAGS) -m es6 --target es6 $^
