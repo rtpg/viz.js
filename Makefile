@@ -10,7 +10,7 @@ EMSCRIPTEN_VERSION = 1.38.44
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
 
-CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker -s USE_CLOSURE_COMPILER=1
+CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
 TS_FLAGS = --lib esnext,WebWorker
@@ -20,11 +20,17 @@ PREAMBLE = "/**\n\
  */"
 BEAUTIFY?=false
 
+ifeq ($(BEAUTIFY), false)
+	TERSER = yarn terser --warn -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)'
+else
+	TERSER = yarn terser --warn -b
+endif
+
 .PHONY: all
 all: \
 		dist \
 			dist/index.cjs dist/index.mjs dist/index.d.ts \
-			dist/render.js dist/render.wasm \
+			dist/render.node.mjs dist/render.browser.js dist/render.wasm \
 		worker \
 
 
@@ -46,7 +52,7 @@ publish:
 .PHONY: debug
 debug:
 	$(MAKE) clean
-	EMCC_DEBUG=1 emcc $(CC_FLAGS) -s ASSERTIONS=2 -g4 -o build-full/render.js src/viz.cpp $(CC_INCLUDES)
+	EMCC_DEBUG=1 emcc $(CC_FLAGS) -s ASSERTIONS=2 -g4 -o build/render.js src/viz.cpp $(CC_INCLUDES)
 	BEAUTIFY=true $(MAKE) all
 
 .PHONY: deps
@@ -56,13 +62,13 @@ deps: expat-full graphviz-full
 .PHONY: clean
 clean:
 	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
-	rm -f build-full/*
-	rm -rf dist
-	rm worker
+	rm -rf build dist
+	rm -f worker
+	mkdir build dist
 
 .PHONY: clobber
 clobber: | clean
-	rm -rf build-main build-full build-lite $(PREFIX_FULL) $(PREFIX_LITE)
+	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE)
 
 dist:
 	mkdir -p $(DIST_FOLDER)
@@ -70,30 +76,59 @@ dist:
 worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build-full/worker.js: src/worker.ts
-	yarn tsc $(TS_FLAGS) --outDir build-full -m es6 --target es6 $^
+build/worker.js: src/worker.ts
+	yarn tsc $(TS_FLAGS) --outDir build -m es6 --target es6 $^
 
-build-full/index.js: src/index.ts
-	yarn tsc $(TS_FLAGS) --outDir build-full -m es6 --target esnext $^
+build/index.js: src/index.ts
+	yarn tsc $(TS_FLAGS) --outDir build -m es6 --target esnext $^
 
 dist/index.d.ts: src/index.ts
 	yarn tsc $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
 
-dist/index.mjs: build-full/index.js
-	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
+dist/index.mjs: build/index.js
+	$(TERSER) --toplevel $^ > $@
 
 dist/index.cjs: src/index.cjs
-	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
+	$(TERSER) --toplevel $^ > $@
 
-dist/render.js: build-full/render.js build-full/worker.js
-	yarn terser -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
+build/render: build/render.js
+	# Creates an ES2015 module from emcc render.js
+	# Don't use any extension to match TS resolution
+	echo "export default function(Module){" |\
+	cat - $^ |\
+	sed -E "s/ENVIRONMENT_(IS|HAS)_[A-Z]+ *=[^=]/false\&\&/" |\
+	sed "s/var false\&\&false;//" > $@ &&\
+	echo "return new Promise(done=>{\
+			Module.onRuntimeInitialized = ()=>done(Module);\
+	})}" >> $@
 
-build-full/render.wasm: build-full/render.js
+build/render.rollup.js: build/render build/worker.js
+	yarn rollup -f esm build/worker.js > $@
 
-dist/render.wasm: build-full/render.wasm
+dist/render.browser.js: build/render.rollup.js
+	$(TERSER) --toplevel \
+		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_WEB=false \
+		-d ENVIRONMENT_IS_WORKER=true -d ENVIRONMENT_IS_NODE=false \
+		$^ > $@
+	
+build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
+	cat $^ > $@
+
+dist/render.node.mjs: build/render.node.mjs
+	$(TERSER) --toplevel \
+		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_WEB=false \
+		-d Module={} -d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
+		$^ > $@
+
+dist/render.js: build/render.js build/worker.js
+	$(TERSER) $^ > $@
+
+build/render.wasm: build/render.js
+
+dist/render.wasm: build/render.wasm
 	cp $^ $@
 
-build-full/render.js: src/viz.cpp
+build/render.js: src/viz.cpp
 	emcc --version | grep $(EMSCRIPTEN_VERSION)
 	emcc $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 

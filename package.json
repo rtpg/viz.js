@@ -11,7 +11,10 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     },
-    "./worker": "./dist/render.js"
+    "./worker": {
+      "import": "./dist/render.node.mjs",
+      "browser": "./dist/render.browser.js"
+    }
   },
   "type": "commonjs",
   "engines": {
@@ -42,6 +45,7 @@
     "@types/node": "^13.5.3",
     "mocha": "^7.0.0",
     "puppeteer": "^2.0.0",
+    "rollup": "^1.31.0",
     "terser": "^4.6.3",
     "typescript": "^3.8.0-beta"
   }

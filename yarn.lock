@@ -11,10 +11,18 @@ __metadata:
     "@types/node": ^13.5.3
     mocha: ^7.0.0
     puppeteer: ^2.0.0
+    rollup: ^1.31.0
     terser: ^4.6.3
     typescript: ^3.8.0-beta
   languageName: unknown
   linkType: soft
+
+"@types/estree@npm:*":
+  version: 0.0.42
+  resolution: "@types/estree@npm:0.0.42"
+  checksum: cb99cea4ef5958e9efd8cb7258356e71642d95113ac7e2376da2335a261c1fbaa43e2f85544ae0cf4880a94844deb6dae3a7f38ca547b4c3ce1985cabd26852c
+  languageName: node
+  linkType: hard
 
 "@types/mime-types@npm:^2.1.0":
   version: 2.1.0
@@ -23,7 +31,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^13.5.3":
+"@types/node@npm:*, @types/node@npm:^13.5.3":
   version: 13.5.3
   resolution: "@types/node@npm:13.5.3"
   checksum: 7e41d8b57ccd8f4a6607baf5115b07052273d6c669bf463781e9f078fc7fe2df6a4ea6b8e0e1922cc2985983921700a00a1fea709e6ba4b8230c0b186503c318
@@ -34,6 +42,15 @@ __metadata:
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
   checksum: f832fdb07dcece6f089ead093b52bd408d60ceb3ddee665ba9806461998f0e897d61d8e7e12e0b787a9954c8f1f2c32280ebc59c60a477e8919527d66afd16e5
+  languageName: node
+  linkType: hard
+
+"acorn@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "acorn@npm:7.1.0"
+  bin:
+    acorn: ./bin/acorn
+  checksum: ca17ed462eb556d0bb6bac8238395e5af562f79fc9dbd9b58806dca2968f58f8c487d83bada265d1221ad8ea69f966e4c7af3adadc5eeeb67238964872d677c8
   languageName: node
   linkType: hard
 
@@ -1489,6 +1506,19 @@ fsevents@~2.1.1:
   bin:
     rimraf: ./bin.js
   checksum: 580678159cca56caf1a5600414716c66ffae68e2c8e31991080f304cf19a3c6b84983cd11405da22bd8b508dd60d492d573bb4e76b7ac8c080cf03f54fcb529e
+  languageName: node
+  linkType: hard
+
+"rollup@npm:^1.31.0":
+  version: 1.31.0
+  resolution: "rollup@npm:1.31.0"
+  dependencies:
+    "@types/estree": "*"
+    "@types/node": "*"
+    acorn: ^7.1.0
+  bin:
+    rollup: dist/bin/rollup
+  checksum: 2ceb742ad34ff600a59ee0a191b4ab35f3b45c7f4644f62da9a3ece7ad719315f57be4bd273693927cca205a34ffd3ada3f2820bef4a371323c1234c90de585a
   languageName: node
   linkType: hard
 
