@@ -8,7 +8,7 @@
       {
         "imports": {
           "@aduh95/viz.js": "/dist/index.mjs",
-          "@aduh95/viz.js/worker": "data:application/javascript,export%20default'/dist/render.js'"
+          "@aduh95/viz.js/worker": "data:application/javascript,export%20default%20encodeURI(`data:application/javascript,import%20r%20from'${location.origin}/dist/render.browser.js';r({locateFile:file=>'${location.origin}/dist/'+file})`)"
         }
       }
     </script>

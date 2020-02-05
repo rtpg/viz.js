@@ -33,7 +33,6 @@ describe("Test graph rendering using web browser", function() {
     ])
   );
 
-  this.afterAll(() => page.close());
   after(() => Promise.all([server.close(), browser.close()]));
 
   this.beforeEach(async function() {
@@ -58,6 +57,7 @@ describe("Test graph rendering using web browser", function() {
       };
     });
   });
+  this.afterEach(() => page.close());
 
   it("rendering sample graphs should not throw errors", async function() {
     const graphs = [
@@ -209,15 +209,11 @@ describe("Test graph rendering using web browser", function() {
       function f() {
         viz
           .renderString(MEMORY_TEST_SRC)
-          .then(() => {
-            i++;
-
-            if (i === NB_ITERATIONS) {
-              done();
-            } else {
-              requestIdleCallback(f, { timeout: 100 });
-            }
-          })
+          .then(
+            i++ === NB_ITERATIONS
+              ? done
+              : () => requestIdleCallback(f, { timeout: 100 })
+          )
           .catch(error);
       }
 

@@ -23,6 +23,7 @@ declare var addEventListener: (type: "message", data: EventListener) => void;
 let exports: any;
 
 if (ENVIRONMENT_IS_WORKER) {
+  var Module: EMCCModuleOverrides;
   exports = (moduleOverrides: EMCCModuleOverrides) => {
     Module = moduleOverrides;
   };

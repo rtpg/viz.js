@@ -27,10 +27,12 @@ const requestListener = async (req, res) => {
         req.url.substring(1).startsWith(distFile)
       )
     ) {
-      const mime = `application/${
-        req.url.endsWith("wasm") ? "wasm" : "javascript"
-      }`;
+      const isWASM = req.url.endsWith("wasm");
+      const mime = `application/${isWASM ? "wasm" : "javascript"}`;
       res.setHeader("Content-Type", mime);
+      if (isWASM) {
+        res.setHeader("Access-Control-Allow-Origin", "null");
+      }
 
       createReadStream(path.join(PROJECT_ROOT, req.url)).pipe(res);
     } else {
