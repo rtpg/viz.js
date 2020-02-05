@@ -13,7 +13,7 @@ GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker -s USE_CLOSURE_COMPILER=1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-TS_FLAGS = --lib esnext,WebWorker --outDir $(DIST_FOLDER)
+TS_FLAGS = --lib esnext,WebWorker
 
 PREAMBLE = "/**\n\
  * Viz.js $(VIZ_VERSION) (Graphviz $(GRAPHVIZ_VERSION), Expat $(EXPAT_VERSION), Emscripten $(EMSCRIPTEN_VERSION))\n\
@@ -56,7 +56,7 @@ deps: expat-full graphviz-full
 .PHONY: clean
 clean:
 	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
-	rm -f build-full/render.js build-full/render.wasm
+	rm -f build-full/*
 	rm -rf dist
 	rm worker
 
@@ -70,25 +70,23 @@ dist:
 worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-dist/worker.js: src/worker.ts
-	yarn tsc $(TS_FLAGS) -m es6 --target es6 $^
+build-full/worker.js: src/worker.ts
+	yarn tsc $(TS_FLAGS) --outDir build-full -m es6 --target es6 $^
 
-dist/index.js: src/index.ts
-	yarn tsc $(TS_FLAGS) -m es6 --target esnext -d $^
+build-full/index.js: src/index.ts
+	yarn tsc $(TS_FLAGS) --outDir build-full -m es6 --target esnext $^
 
 dist/index.d.ts: src/index.ts
-	yarn tsc $(TS_FLAGS) -d --emitDeclarationOnly $^
+	yarn tsc $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
 
-dist/index.mjs: dist/index.js
+dist/index.mjs: build-full/index.js
 	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
-	rm $^
 
 dist/index.cjs: src/index.cjs
 	yarn terser --toplevel -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
 
-dist/render.js: build-full/render.js dist/worker.js
+dist/render.js: build-full/render.js build-full/worker.js
 	yarn terser -m --warn -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' $^ > $@
-	rm dist/worker.js
 
 build-full/render.wasm: build-full/render.js
 
