@@ -1,8 +1,6 @@
 import type { Worker as NodeJSWorker } from "worker_threads";
 import type { RenderRequestListener, RenderResponse } from "./types";
 
-
-
 class WorkerWrapper {
   private _worker: Worker | NodeJSWorker;
   private _isNodeWorker: boolean;
@@ -113,7 +111,9 @@ class Viz {
       "undefined"
     ) {
       this._wrapper = new WorkerWrapper(
-        new Worker((options as VizConstructorOptionsWorkerURL).workerURL)
+        new Worker((options as VizConstructorOptionsWorkerURL).workerURL, {
+          type: "module",
+        })
       );
     } else if (
       typeof (options as VizConstructorOptionsWorker).worker !== "undefined"
