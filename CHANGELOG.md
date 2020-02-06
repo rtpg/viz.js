@@ -5,8 +5,9 @@
 ##### Notable changes
 
 - The library is now compiled to WASM, which shrinks the file size (Viz.js
-  (2.1.2 full version) brotlified: 409K; @aduh95/viz.js (3.0.0-beta.3)
-  brotlified: 371K), should improve performances, allows dynamic memory growth.
+  (2.1.2 full version) brotlified: 409K; @aduh95/viz.js (3.0.0-beta.5 browser
+  version) brotlified: 368K; 10% decrease), should improve performances and
+  allows dynamic memory growth.
 - The library is able to reset its internal error state, which makes the
   [v2 wiki caveat](https://github.com/mdaines/viz.js/wiki/Caveats#rendering-graphs-with-user-input)
   unnecessary.
@@ -26,9 +27,17 @@
 - **BREAKING:** Remove `Module` and `render` from `Viz` constructor's options
   (you must now specify either `worker` or `workerURL`).
 - **BREAKING:** Remove _lite_ version, Viz.js now comes in only one variant.
-- **BREAKING:** The `render.js` file (that replaces `full.render.js`) exports a
-  worker_thread factory. It's available through `@aduh95/viz.js/worker` on
-  Node.js and bundle tools that support `package.json`#`exports`.
+- **BREAKING:** The `full.render.js` script is replaced by the `render.node.mjs`
+  and `render.browser.js` modules.
+- **BREAKING:** The `render.node.js` module (that replaces `full.render.js`)
+  exports a worker_thread factory when imported from the main thread. It's
+  available through `@aduh95/viz.js/worker` specifier on Node.js and bundle
+  tools that support `package.json`#`exports`.
+- **BREAKING:** The `render.browser.js` module (that replaces `full.render.js`)
+  exports a function which takes a Module object as parameter. You should use it
+  to give the path to `render.wasm` the Emscripten script. You should not import
+  this module from the main thread. On bundle tools that support
+  `package.json`#`exports`, you can use the specifier `@aduh95/viz.js/worker`.
 - **BREAKING:** Compiles to WebAssembly, which cannot be bundled in the
   `render.js` file like asm.js used to. Depending on your bundling tool, you may
   need some extra config to make everything work.

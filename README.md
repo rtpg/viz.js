@@ -52,37 +52,61 @@ async function dot2svg(dot, options = {}) {
 
 ### Browsers
 
-You can either use the `worker` or the `workerURL` on the constructor.
+You can either use the `worker` or the `workerURL` on the constructor. Note that
+when using `workerURL`, `Viz` constructor will try to spawn a webworker using
+`type=module`. If you don't want a module worker, you should provide a `worker`
+instead.
+
+The Worker module exports a function that takes
+[an Emscripten Module object](https://emscripten.org/docs/api_reference/module.html#affecting-execution).
+You can use that to tweak the defaults, the only requirement is to define a
+`locateFile` method that returns the URL of the WASM file.
 
 ```js
-import Viz from "/node_modules/@aduh95/viz.js/dist/index.mjs";
+// worker.js
+import initWASM from "/node_modules/@aduh95/viz.js/dist/render.browser.js";
 
-const workerURL = "/node_modules/@aduh95/viz.js/dist/render.js";
+initWASM({
+  locateFile() {
+    return "/node_modules/@aduh95/viz.js/dist/render.wasm";
+  },
+});
 ```
 
-N.B.: Emscripten `render.js` expects to find a `render.wasm` on the same
-directory as `render.js`. If you are using a building tool that changes file
-names and/or file location, the loading would fail.
-
-If you are using a CDN or loading the files from a different origin, most
-browsers will block you from spawning a cross-origin webworker. There is a
-workaround:
+And give feed that module to the main thread:
 
 ```js
-import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.2/dist/index.mjs";
+//main.js
+import Viz from "/node_modules/@aduh95/viz.js/dist/index.mjs";
+const workerURL = "/worker.js";
+
+let viz;
+async function dot2svg(dot, options) {
+  if (viz === undefined) {
+    viz = new Viz({ workerURL });
+  }
+  return viz.renderString(dot, options);
+}
+```
+
+If you are using a CDN and don't want a separate file for the worker module,
+there is a workaround:
+
+```js
+import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5/dist/index.mjs";
 
 const workerURL = URL.createObjectURL(
   new Blob(
     [
-      "self.Module =",
+      "const Module =",
       "{ locateFile: file =>",
-      '"https://unpkg.com/@aduh95/viz.js@3.0.0-beta.2/dist/"',
+      '"https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5/dist/"',
       "+ file",
       "};", // Module.locateFile let the worker resolve the wasm file URL
-      "importScripts(", // importScripts is not restricted by same-origin policy
+      "import(", // importScripts is not restricted by same-origin policy
       "Module.locateFile(", // We can use it to load the JS file
       '"render.js"',
-      "));",
+      ")).then(i=>i(Module));",
     ],
     { type: "application/javascript" }
   )
