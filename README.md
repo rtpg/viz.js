@@ -64,11 +64,18 @@ You can use that to tweak the defaults, the only requirement is to define a
 
 ```js
 // worker.js
-import initWASM from "/node_modules/@aduh95/viz.js/dist/render.browser.js";
+import initWASM from "@aduh95/viz.js/worker";
+// If you are not using a bundler that supports package.json#exports
+// use /node_modules/@aduh95/viz.js/dist/render.browser.js instead.
+
+import wasmURL from "file-loader!@aduh95/viz.js/wasm";
+// If you are not using a bundler that supports package.json#exports
+// Or doesn't have a file-loader plugin to get URL of the asset,
+// use "/node_modules/@aduh95/viz.js/dist/render.wasm" instead.
 
 initWASM({
   locateFile() {
-    return "/node_modules/@aduh95/viz.js/dist/render.wasm";
+    return wasmURL;
   },
 });
 ```
@@ -77,7 +84,10 @@ And give feed that module to the main thread:
 
 ```js
 //main.js
-import Viz from "/node_modules/@aduh95/viz.js/dist/index.mjs";
+import Viz from "@aduh95/viz.js";
+// If you are not using a bundler that supports package.json#exports
+// use /node_modules/@aduh95/viz.js/dist/index.mjs instead.
+
 const workerURL = "/worker.js";
 
 let viz;
