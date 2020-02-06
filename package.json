@@ -11,6 +11,7 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     },
+    "./wasm": "./dist/render.wasm",
     "./worker": {
       "import": "./dist/render.node.mjs",
       "browser": "./dist/render.browser.js"
@@ -29,8 +30,9 @@
     "emscripten"
   ],
   "files": [
-    "worker",
-    "dist/"
+    "dist/",
+    "wasm",
+    "worker"
   ],
   "contributors": [
     "Mike Daines <mdaines@fastmail.com>",

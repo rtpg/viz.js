@@ -31,6 +31,7 @@ all: \
 		dist \
 			dist/index.cjs dist/index.mjs dist/index.d.ts \
 			dist/render.node.mjs dist/render.browser.js dist/render.wasm \
+	 	wasm \
 		worker \
 
 
@@ -63,7 +64,7 @@ deps: expat-full graphviz-full
 clean:
 	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -rf build dist
-	rm -f worker
+	rm -f wasm worker
 	mkdir build dist
 
 .PHONY: clobber
@@ -73,7 +74,7 @@ clobber: | clean
 dist:
 	mkdir -p $(DIST_FOLDER)
 
-worker:
+wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
 build/worker.js: src/worker.ts
