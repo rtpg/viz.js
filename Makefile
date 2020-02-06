@@ -117,7 +117,7 @@ build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
 dist/render.node.mjs: build/render.node.mjs
 	$(TERSER) --toplevel \
 		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_WEB=false \
-		-d Module={} -d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
+		-d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
 		$^ > $@
 
 dist/render.js: build/render.js build/worker.js

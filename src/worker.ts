@@ -11,7 +11,6 @@ import initializeWasm, {
 } from "./render";
 
 // Emscripten "magic" globals
-declare var Module: EMCCModuleOverrides;
 declare var ENVIRONMENT_IS_WORKER: boolean;
 declare var ENVIRONMENT_IS_NODE: boolean;
 
@@ -22,24 +21,46 @@ declare var addEventListener: (type: "message", data: EventListener) => void;
 // @ts-ignore
 let exports: any;
 
+let asyncModuleOverrides: Promise<EMCCModuleOverrides>;
+let Module: WebAssemblyModule;
+async function getModule() {
+  if (Module === undefined) {
+    Module = await asyncModuleOverrides.then(initializeWasm);
+  }
+  return Module;
+}
+
 if (ENVIRONMENT_IS_WORKER) {
-  var Module: EMCCModuleOverrides;
+  let resolveModuleOverrides;
+  asyncModuleOverrides = new Promise(done => {
+    resolveModuleOverrides = done;
+  });
   exports = (moduleOverrides: EMCCModuleOverrides) => {
-    Module = moduleOverrides;
+    if (resolveModuleOverrides) {
+      resolveModuleOverrides(moduleOverrides);
+    } else {
+      Promise.resolve().then(() => exports(moduleOverrides));
+    }
   };
   addEventListener("message", onmessage);
 } else if (ENVIRONMENT_IS_NODE) {
   const { parentPort, isMainThread, Worker } = require("worker_threads");
   if (isMainThread) {
+    asyncModuleOverrides = Promise.reject(
+      new Error("Main thread initialization is not supported.")
+    );
     exports = () => new Worker(__filename);
   } else {
+    // On Node.js, EMCC doesn't use `locateFile` method to find the WASM file
+    asyncModuleOverrides = Promise.resolve({} as EMCCModuleOverrides);
+    
     parentPort.on("message", (data: RenderResponse) =>
       onmessage({ data } as MessageEvent)
     );
     postMessage = function() {
       "use strict";
       return parentPort.postMessage.apply(parentPort, arguments);
-    }
+    };
   }
 }
 
@@ -76,7 +97,7 @@ function onmessage(event: MessageEvent) {
   "use strict";
   const { id, src, options } = event.data as RenderRequest;
 
-  initializeWasm(Module)
+  getModule()
     .then(Module => {
       const result = render(Module, src, options);
       postMessage({ id, result });
