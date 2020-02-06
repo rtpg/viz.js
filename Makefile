@@ -45,7 +45,7 @@ publish:
 	npm version $(VIZ_VERSION)
 	$(MAKE) clean
 	$(MAKE) test -j4 || (git reset HEAD^ --hard && git tag -d v$(VIZ_VERSION) && exit 1)
-	tar -cJf sources/viz.js-v$(VIZ_VERSION).tar.xz dist/
+	yarn pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
 	npm publish --access public
 	git push && git push --tags
 
