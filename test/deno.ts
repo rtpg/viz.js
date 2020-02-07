@@ -2,7 +2,7 @@ import { unreachable, runTests, test } from "std::testing";
 
 /// @deno-types="@aduh95/viz.js/types"
 import Viz from "@aduh95/viz.js";
-import workerURL from "@aduh95/viz.js/worker";
+const workerURL = "./deno-files/worker.ts";
 
 test({
   name: "Test graph rendering using Deno",
@@ -37,6 +37,5 @@ test({
 runTests();
 
 async function getViz() {
-  const worker = new Worker(workerURL, { type: "module" });
-  return new Viz({ worker });
+  return new Viz({ workerURL });
 }

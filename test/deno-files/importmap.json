@@ -3,7 +3,7 @@
     "std::testing": "https://deno.land/std/testing/mod.ts",
     "@aduh95/viz.js": "../../dist/index.mjs",
     "@aduh95/viz.js/types": "../../dist/index.d.ts",
-    "@aduh95/viz.js/worker": "./worker.js",
+    "@aduh95/viz.js/worker": "../../dist/render.browser.js",
     "node": "./node.d.ts"
   }
 }
