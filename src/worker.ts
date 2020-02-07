@@ -46,14 +46,18 @@ if (ENVIRONMENT_IS_WORKER) {
 } else if (ENVIRONMENT_IS_NODE) {
   const { parentPort, isMainThread, Worker } = require("worker_threads");
   if (isMainThread) {
-    asyncModuleOverrides = Promise.reject(
-      new Error("Main thread initialization is not supported.")
-    );
+    asyncModuleOverrides = {
+      then() {
+        return Promise.reject(
+          new Error("Main thread initialization is not supported.")
+        );
+      },
+    } as Promise<never>;
     exports = () => new Worker(__filename);
   } else {
     // On Node.js, EMCC doesn't use `locateFile` method to find the WASM file
     asyncModuleOverrides = Promise.resolve({} as EMCCModuleOverrides);
-    
+
     parentPort.on("message", (data: RenderResponse) =>
       onmessage({ data } as MessageEvent)
     );
