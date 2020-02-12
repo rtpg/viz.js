@@ -10,9 +10,11 @@ EMSCRIPTEN_VERSION = 1.38.44
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
 
+CC ?= emcc
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
+TSC ?= yarn tsc
 TS_FLAGS = --lib esnext,WebWorker
 
 PREAMBLE = "/**\n\
@@ -26,6 +28,8 @@ else
 	TERSER = yarn terser --warn -b
 endif
 
+MOCHA ?= yarn mocha
+
 .PHONY: all
 all: \
 		dist \
@@ -37,7 +41,7 @@ all: \
 
 .PHONY: test
 test: all
-	yarn mocha test
+	$(MOCHA) $@
 	# Deno test don't pass, skipping
 	# deno --importmap test/deno-files/importmap.json test/deno.ts
 
@@ -53,16 +57,16 @@ publish:
 .PHONY: debug
 debug:
 	$(MAKE) clean
-	EMCC_DEBUG=1 emcc $(CC_FLAGS) -s ASSERTIONS=2 -g4 -o build/render.js src/viz.cpp $(CC_INCLUDES)
+	EMCC_DEBUG=1 $(CC) $(CC_FLAGS) -s ASSERTIONS=2 -g4 -o build/render.js src/viz.cpp $(CC_INCLUDES)
 	BEAUTIFY=true $(MAKE) all
 
 .PHONY: deps
-deps: expat-full graphviz-full
+deps: | expat-full graphviz-full
 	yarn install
 
 .PHONY: clean
 clean:
-	echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
+	@echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -rf build dist
 	rm -f wasm worker
 	mkdir build dist
@@ -78,13 +82,13 @@ wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
 build/worker.js: src/worker.ts
-	yarn tsc $(TS_FLAGS) --outDir build -m es6 --target es6 $^
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target es6 $^
 
 build/index.js: src/index.ts
-	yarn tsc $(TS_FLAGS) --outDir build -m es6 --target esnext $^
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $^
 
 dist/index.d.ts: src/index.ts
-	yarn tsc $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
+	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
 
 dist/index.mjs: build/index.js
 	$(TERSER) --toplevel $^ > $@
@@ -97,21 +101,17 @@ build/render: build/render.js
 	# Don't use any extension to match TS resolution
 	echo "export default function(Module){" |\
 	cat - $^ |\
-	sed -E "s/ENVIRONMENT_(IS|HAS)_[A-Z]+ *=[^=]/false\&\&/" |\
-	sed "s/var false\&\&false;//" > $@ &&\
+	sed -E \
+		-e "s/ENVIRONMENT_(IS|HAS)_[A-Z]+ *=[^=]/false\&\&/" \
+		-e "s/var false\&\&false;//" \
+		> $@ &&\
 	echo "return new Promise(done=>{\
 			Module.onRuntimeInitialized = ()=>done(Module);\
 	})}" >> $@
 
-build/render.rollup.js: build/render build/worker.js
-	yarn rollup -f esm build/worker.js > $@
+build/render.rollup.js: build/worker.js build/render 
+	yarn rollup -f esm $< > $@
 
-dist/render.browser.js: build/render.rollup.js
-	$(TERSER) --toplevel \
-		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_WEB=false \
-		-d ENVIRONMENT_IS_WORKER=true -d ENVIRONMENT_IS_NODE=false \
-		$^ > $@
-	
 build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
 	cat $^ > $@
 
@@ -121,17 +121,23 @@ dist/render.node.mjs: build/render.node.mjs
 		-d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
 		$^ > $@
 
+dist/render.browser.js: build/render.rollup.js
+	$(TERSER) --toplevel \
+		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_WEB=false \
+		-d ENVIRONMENT_IS_WORKER=true -d ENVIRONMENT_IS_NODE=false \
+		$^ > $@
+
 dist/render.js: build/render.js build/worker.js
 	$(TERSER) $^ > $@
 
 build/render.wasm: build/render.js
 
 dist/render.wasm: build/render.wasm
-	cp $^ $@
+	cp $< $@
 
 build/render.js: src/viz.cpp
-	emcc --version | grep $(EMSCRIPTEN_VERSION)
-	emcc $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
+	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
+	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
 $(PREFIX_FULL):
 	mkdir -p $(PREFIX_FULL)
