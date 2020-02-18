@@ -103,20 +103,19 @@ If you are using a CDN and don't want a separate file for the worker module,
 there is a workaround:
 
 ```js
-import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5/dist/index.mjs";
+import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5";
 
+const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5/dist";
 const workerURL = URL.createObjectURL(
   new Blob(
     [
-      "const Module =",
-      "{ locateFile: file =>",
-      '"https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5/dist/"',
-      "+ file",
-      "};", // Module.locateFile let the worker resolve the wasm file URL
-      "import(", // importScripts is not restricted by same-origin policy
-      "Module.locateFile(", // We can use it to load the JS file
-      '"render.js"',
-      ")).then(i=>i(Module));",
+      `import render from "${vizDistFolder}/render.browser.js";`,
+      "render({",
+      "locateFile(fileName) {",
+      // allows the worker to resolve the wasm file URL
+      `return \`${vizDistFolder}/\${fileName}\`;`,
+      "}",
+      "});",
     ],
     { type: "application/javascript" }
   )
