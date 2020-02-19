@@ -103,14 +103,14 @@ If you are using a CDN and don't want a separate file for the worker module,
 there is a workaround:
 
 ```js
-import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5";
+import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6";
 
-const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.5/dist";
+const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist";
 const workerURL = URL.createObjectURL(
   new Blob(
     [
-      `import render from "${vizDistFolder}/render.browser.js";`,
-      "render({",
+      `import init from "${vizDistFolder}/render.browser.js";`,
+      "init({",
       "locateFile(fileName) {",
       // allows the worker to resolve the wasm file URL
       `return \`${vizDistFolder}/\${fileName}\`;`,
@@ -126,6 +126,54 @@ async function dot2svg(dot, options) {
 
   return viz.renderString(dot, options);
 }
+```
+
+If you want to support browsers that do not support loading webworker as module,
+or want a custom message handling, you can use dynamic imports to help you:
+
+```js
+// worker.js
+/**
+ * Lazy-loads Viz.js message handler
+ * @returns {(event: MessageEvent) => Promise<any>}
+ */
+function getVizMessageHandler() {
+  if (this._messageHandler === undefined) {
+    const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist";
+    const Module = {
+      // locateFile is used by render module to locate WASM file.
+      locateFile: fileName => `${vizDistFolder}/${fileName}`,
+    };
+    this._messageHandler = import(Module.locateFile("render.browser.js")).then(
+      ({ default: init, onmessage }) => {
+        // to avoid conflicts, disable viz.js message handler
+        self.removeEventListener("message", onmessage);
+
+        return init(Module).then(() => onmessage);
+      }
+    );
+  }
+  return this._messageHandler;
+}
+
+self.addEventListener("message", event => {
+  if (event.data.id) {
+    // handling event sent by viz.js
+    getVizMessageHandler()
+      .then(onmessage => onmessage(event))
+      .catch(error => {
+        // handle dynamic import error here
+        console.error(error);
+
+        // Note: If an error is emitted by Viz.js internals (dot syntax error,
+        // WASM file initialization error, etc.), the error is catch and sent
+        // directly through postMessage.
+        // If you think this behavior is not ideal, please open an issue.
+      });
+  } else {
+    // handle other messages
+  }
+});
 ```
 
 ## Building From Source
