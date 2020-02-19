@@ -1,5 +1,5 @@
 export type EMCCModuleOverrides = {
-  locateFile: () => string;
+  locateFile?: () => string;
   [key: string]: any;
 };
 

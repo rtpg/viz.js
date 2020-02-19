@@ -74,7 +74,7 @@ clean:
 
 .PHONY: clobber
 clobber: | clean
-	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE)
+	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE) node_modules
 
 dist:
 	mkdir -p $(DIST_FOLDER)
@@ -83,7 +83,7 @@ wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
 build/worker.js: src/worker.ts
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target es6 $^
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $^
 
 build/index.js: src/index.ts
 	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $^

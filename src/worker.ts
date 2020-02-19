@@ -4,6 +4,7 @@ import type {
   RenderResponse,
   RenderRequest,
 } from "./types";
+import type { Worker } from "worker_threads";
 
 import initializeWasm, {
   WebAssemblyModule,
@@ -19,7 +20,9 @@ declare var postMessage: (data: RenderResponse) => void;
 declare var addEventListener: (type: "message", data: EventListener) => void;
 
 // @ts-ignore
-let exports: any;
+let exports: (
+  moduleOverrides?: EMCCModuleOverrides
+) => Promise<EMCCModuleOverrides> | Worker;
 
 let asyncModuleOverrides: Promise<EMCCModuleOverrides>;
 let Module: WebAssemblyModule;
@@ -31,20 +34,28 @@ async function getModule() {
 }
 
 if (ENVIRONMENT_IS_WORKER) {
-  let resolveModuleOverrides;
+  let resolveModuleOverrides: Function;
   asyncModuleOverrides = new Promise(done => {
     resolveModuleOverrides = done;
   });
   exports = (moduleOverrides: EMCCModuleOverrides) => {
     if (resolveModuleOverrides) {
       resolveModuleOverrides(moduleOverrides);
+      return asyncModuleOverrides;
     } else {
-      Promise.resolve().then(() => exports(moduleOverrides));
+      return Promise.resolve().then(
+        () => exports(moduleOverrides) as Promise<any>
+      );
     }
   };
   addEventListener("message", onmessage);
 } else if (ENVIRONMENT_IS_NODE) {
-  const { parentPort, isMainThread, Worker } = require("worker_threads");
+  const {
+    parentPort,
+    isMainThread,
+    Worker,
+    workerData,
+  } = require("worker_threads");
   if (isMainThread) {
     asyncModuleOverrides = {
       then() {
@@ -53,10 +64,15 @@ if (ENVIRONMENT_IS_WORKER) {
         );
       },
     } as Promise<never>;
-    exports = () => new Worker(__filename);
-  } else {
-    // On Node.js, EMCC doesn't use `locateFile` method to find the WASM file
-    asyncModuleOverrides = Promise.resolve({} as EMCCModuleOverrides);
+    exports = moduleOverrides =>
+      new Worker(__filename, {
+        type: "module",
+        workerData: { __filename, moduleOverrides },
+      });
+  } else if (workerData.__filename === __filename) {
+    // if workerData is `__filename`, we assume worker has been spawned by this
+    // module and user wants the default behavior.
+    asyncModuleOverrides = Promise.resolve(workerData.moduleOverrides || {});
 
     parentPort.on("message", (data: RenderResponse) =>
       onmessage({ data } as MessageEvent)
@@ -64,6 +80,23 @@ if (ENVIRONMENT_IS_WORKER) {
     postMessage = function() {
       "use strict";
       return parentPort.postMessage.apply(parentPort, arguments);
+    };
+  } else {
+    // Worker spawned by another module or script, exports a function that lets
+    // user define a custom override objects.
+    let resolveModuleOverrides: Function;
+    asyncModuleOverrides = new Promise(done => {
+      resolveModuleOverrides = done;
+    });
+    exports = (moduleOverrides: EMCCModuleOverrides) => {
+      if (resolveModuleOverrides) {
+        resolveModuleOverrides(moduleOverrides);
+        return asyncModuleOverrides;
+      } else {
+        return Promise.resolve().then(
+          () => exports(moduleOverrides) as Promise<EMCCModuleOverrides>
+        );
+      }
     };
   }
 }
@@ -73,8 +106,6 @@ function render(
   src: string,
   options: RenderOptions
 ) {
-  "use strict";
-
   for (const { path, data } of options.files) {
     Module.vizCreateFile(path, data);
   }
@@ -97,11 +128,10 @@ function render(
   return resultString;
 }
 
-function onmessage(event: MessageEvent) {
-  "use strict";
+export function onmessage(event: MessageEvent) {
   const { id, src, options } = event.data as RenderRequest;
 
-  getModule()
+  return getModule()
     .then(Module => {
       const result = render(Module, src, options);
       postMessage({ id, result });
