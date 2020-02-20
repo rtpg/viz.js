@@ -43,8 +43,11 @@ all: \
 .PHONY: test
 test: all
 	$(MOCHA) $@
-	# Deno test don't pass, skipping
-	# deno --importmap test/deno-files/importmap.json test/deno.ts
+	$(MAKE) deno-test
+
+.PHONY: deno-test
+deno-test: test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
+	deno --importmap test/deno-files/importmap.json test/deno.ts
 
 .PHONY: publish
 publish:
@@ -70,6 +73,7 @@ clean:
 	@echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -rf build dist
 	rm -f wasm worker
+	rm -f test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
 	mkdir build dist
 
 .PHONY: clobber
@@ -91,6 +95,10 @@ build/index.js: src/index.ts
 dist/index.d.ts: src/index.ts
 	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
 
+test/deno-files/index.d.ts: dist/index.d.ts
+	sed '\,^///, d;/^import type/ d' $< > $@
+	echo "declare type NodeJSWorker=never;" >> $@
+
 dist/index.mjs: build/index.js
 	$(TERSER) --toplevel $^ > $@
 
@@ -102,9 +110,10 @@ build/render: build/render.js
 	# Don't use any extension to match TS resolution
 	echo "export default function(Module){" |\
 	cat - $^ |\
-	sed -E \
-		-e "s/ENVIRONMENT_(IS|HAS)_[A-Z]+ *=[^=]/false\&\&/" \
-		-e "s/var false\&\&false;//" \
+	sed \
+		-e "s/ENVIRONMENT_[[:upper:]]*_[[:upper:]]*[[:space:]]*=[^=]/false\&\&/g" \
+		-e "s/var false\&\&false;//g" \
+		-e "s/new TextDecoder(.utf-16le.)/false/g" \
 		> $@ &&\
 	echo "return new Promise(done=>{\
 			Module.onRuntimeInitialized = ()=>done(Module);\
@@ -132,6 +141,9 @@ dist/render.js: build/render.js build/worker.js
 	$(TERSER) $^ > $@
 
 build/render.wasm: build/render.js
+	@if ! ([ -f '$@' ]);then \
+		rm $^ && $(MAKE) $@; \
+	fi
 
 dist/render.wasm: build/render.wasm
 	cp $< $@
@@ -139,6 +151,11 @@ dist/render.wasm: build/render.wasm
 build/render.js: src/viz.cpp
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
+
+test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
+	echo "export default Uint16Array.from([" > $@ && \
+	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
+	echo "]).buffer.slice(2, -1)" >> $@
 
 $(PREFIX_FULL):
 	mkdir -p $(PREFIX_FULL)

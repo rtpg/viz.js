@@ -1,20 +1,34 @@
-import { unreachable, runTests, test } from "std::testing";
+import { assertStrContains, unreachable } from "std::testing";
 
 /// @deno-types="@aduh95/viz.js/types"
 import Viz from "@aduh95/viz.js";
-const workerURL = "./deno-files/worker.ts";
+const workerURL = "./deno-files/worker.js";
 
-test({
+{
+  const { addEventListener } = Worker.prototype as any;
+  (Worker as any).prototype.addEventListener = function(
+    eventType: string,
+    handler: Function
+  ) {
+    if ("message" === eventType) {
+      this.onmessage = handler;
+    } else {
+      addEventListener.apply(this, arguments);
+    }
+  };
+}
+
+Deno.test({
   name: "Test graph rendering using Deno",
   fn(): Promise<any> {
     return getViz()
       .then(viz => viz.renderString("digraph { a -> b; }"))
-      .catch(console.error)
+      .then(svg => assertStrContains(svg, "</svg>"))
       .catch(unreachable);
   },
 });
 
-test({
+Deno.test({
   name: "Test render several graphs with same instance",
   async fn(): Promise<any> {
     const viz = await getViz();
@@ -30,11 +44,12 @@ test({
 
         return viz.renderString(dot + "}");
       })
+      .then(svg => assertStrContains(svg, "</svg>"))
       .catch(unreachable);
   },
 });
 
-runTests();
+Deno.runTests();
 
 async function getViz() {
   return new Viz({ workerURL });

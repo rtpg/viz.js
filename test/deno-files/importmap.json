@@ -1,8 +1,8 @@
 {
   "imports": {
-    "std::testing": "https://deno.land/std/testing/mod.ts",
+    "std::testing": "https://deno.land/std/testing/asserts.ts",
     "@aduh95/viz.js": "../../dist/index.mjs",
-    "@aduh95/viz.js/types": "../../dist/index.d.ts",
+    "@aduh95/viz.js/types": "./index.d.ts",
     "@aduh95/viz.js/worker": "../../dist/render.browser.js",
     "node": "./node.d.ts"
   }

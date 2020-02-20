@@ -10,3 +10,9 @@ debug/
 dist/
 /wasm
 /worker
+
+test/deno-files/render.wasm.*
+test/deno-files/index.d.ts
+
+.yarn/cache
+.pnp.*
