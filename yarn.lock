@@ -32,9 +32,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:^13.5.3":
-  version: 13.7.1
-  resolution: "@types/node@npm:13.7.1"
-  checksum: 2/93c5252ec2bfd0de52858cfb986695f89a4b16ad341a7885e11f650cb28e879199c620effe4d17dd68aa8944691db491ebe6ff27cd8e87989e762581514067bb
+  version: 13.7.4
+  resolution: "@types/node@npm:13.7.4"
+  checksum: 2/6aa330eaa5a93370adc14e44bb4af92de463116e5f37d5c30d447e3d519a185db50c65c442c2a4c8f09c7b6eae5c9bcd7783258534aee191d2ec672249c2bc22
   languageName: node
   linkType: hard
 
@@ -62,14 +62,14 @@ __metadata:
   linkType: hard
 
 "ajv@npm:^6.5.5":
-  version: 6.11.0
-  resolution: "ajv@npm:6.11.0"
+  version: 6.12.0
+  resolution: "ajv@npm:6.12.0"
   dependencies:
     fast-deep-equal: ^3.1.1
     fast-json-stable-stringify: ^2.0.0
     json-schema-traverse: ^0.4.1
     uri-js: ^4.2.2
-  checksum: 2/64f53d553feaac3baf8ef6fdc4cf66e6823f9e0f5bdbf612f4674322c40664448664f09b1b37e5a341a399bf7bc530366cde1a06fe991f06518299773b4f9330
+  checksum: 2/aed1e0ab1b906913e2b466b1a0372ee5e4fe2927802ff81bcce350f482b0546cdb49df6ab551adad191ac19766007cdaf6c2d8b70e992528b806d9a8275ce2bd
   languageName: node
   linkType: hard
 
@@ -638,16 +638,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fsevents@patch:fsevents@~2.1.1#builtin<compat/fsevents>":
-  version: 2.1.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.1.2#builtin<compat/fsevents>::version=2.1.2&hash=77dfe6"
-  dependencies:
-    node-gyp: latest
-  checksum: 2/6fb6ae0c1e5aca68fec6c0bf119d0dc9a1d653af60925c7ec69868f0ac68fa6930eeb769745030ecb560e00c144c74068da62bb77a000cc7dc263963ba4e2d7f
-  languageName: node
-  linkType: hard
-
-fsevents@~2.1.1:
+"fsevents@npm:~2.1.1":
   version: 2.1.2
   resolution: "fsevents@npm:2.1.2"
   dependencies:
@@ -1780,23 +1771,13 @@ fsevents@~2.1.1:
   languageName: node
   linkType: hard
 
-typescript@^3.8.0-beta:
-  version: 3.8.0-dev.20200211
-  resolution: "typescript@npm:3.8.0-dev.20200211"
+"typescript@npm:^3.8.0-beta":
+  version: 3.8.2
+  resolution: "typescript@npm:3.8.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 2/cdc9b5069eabd5c6fc6a20eea029de02239fb0acc553209881f5c31dfb464c0ef5ef4719cdc1d5011bd203b272c18125f146eaf16ef6ea15678001f7747a2454
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@^3.8.0-beta#builtin<compat/typescript>":
-  version: 3.8.0-dev.20200211
-  resolution: "typescript@patch:typescript@npm%3A3.8.0-dev.20200211#builtin<compat/typescript>::version=3.8.0-dev.20200211&hash=273569"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 2/272c6a1d2686e44b97a7025de7c4ff7dd6bc58d40242709913ebba43d4211831481d659341c1cbdb2c6ca849ebccd9060a514b863c19e899c4367a5fea9cad81
+  checksum: 2/12d822e84f0d1280d7aa7bb9f0e80b756e1e2d61b481bc1aff6e063e4839f3da6367bfae64338906fcb019c43ca82215a00a747f453ca157d72ce337f3825c88
   languageName: node
   linkType: hard
 
