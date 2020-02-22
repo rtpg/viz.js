@@ -176,6 +176,14 @@ self.addEventListener("message", event => {
 });
 ```
 
+### Deno
+
+_The support is experimental. You would probably need to monkey-patch the
+unimplemented web APIs. Please check the test folder for an example of
+implementation._
+
+As Deno aims to expose all the web API, you can use the browser implementation.
+
 ## Building From Source
 
 To build from source, first
