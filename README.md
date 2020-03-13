@@ -105,24 +105,38 @@ there is a workaround:
 ```js
 import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6";
 
-const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist";
-const workerURL = URL.createObjectURL(
-  new Blob(
-    [
-      `import init from "${vizDistFolder}/render.browser.js";`,
-      "init({",
-      "locateFile(fileName) {",
-      // allows the worker to resolve the wasm file URL
-      `return \`${vizDistFolder}/\${fileName}\`;`,
-      "}",
-      "});",
-    ],
-    { type: "application/javascript" }
-  )
-);
+const locateFile = fileName =>
+  "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist/" + fileName;
+const onmessage = async function(event) {
+  if (this.messageHandler === undefined) {
+    // Lazy loading actual handler
+    const { default: init, onmessage } = await import(
+      Module.locateFile("render.browser.js")
+    );
+    // Removing default MessageEvent handler
+    removeEventListener("message", onmessage);
+    await init(Module);
+    this.messageHandler = onmessage;
+  }
+  return this.messageHandler(event);
+};
+const vizOptions = {
+  workerURL: URL.createObjectURL(
+    new Blob(
+      [
+        "const Module = { locateFile:",
+        locateFile.toString(),
+        "};",
+        "onmessage=",
+        onmessage.toString(),
+      ],
+      { type: "application/javascript" }
+    )
+  ),
+};
 
 async function dot2svg(dot, options) {
-  const viz = new Viz({ workerURL });
+  const viz = new Viz(vizOptions);
 
   return viz.renderString(dot, options);
 }
