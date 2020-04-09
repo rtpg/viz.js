@@ -18,6 +18,8 @@ CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PRE
 TSC ?= yarn tsc
 TS_FLAGS = --lib esnext,WebWorker
 
+DENO ?= deno
+
 PREAMBLE = "/**\n\
  * Viz.js $(VIZ_VERSION) (Graphviz $(GRAPHVIZ_VERSION), Expat $(EXPAT_VERSION), Emscripten $(EMSCRIPTEN_VERSION))\n\
  */"
@@ -47,7 +49,7 @@ test: all
 
 .PHONY: deno-test
 deno-test: test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
-	deno --importmap test/deno-files/importmap.json test/deno.ts
+	$(DENO) --importmap test/deno-files/importmap.json test/deno.ts
 
 .PHONY: publish
 publish:

@@ -6,7 +6,7 @@ const workerURL = "./deno-files/worker.js";
 
 {
   const { addEventListener } = Worker.prototype as any;
-  (Worker as any).prototype.addEventListener = function(
+  (Worker as any).prototype.addEventListener = function (
     eventType: string,
     handler: Function
   ) {
@@ -22,10 +22,11 @@ Deno.test({
   name: "Test graph rendering using Deno",
   fn(): Promise<any> {
     return getViz()
-      .then(viz => viz.renderString("digraph { a -> b; }"))
-      .then(svg => assertStrContains(svg, "</svg>"))
+      .then((viz) => viz.renderString("digraph { a -> b; }"))
+      .then((svg) => assertStrContains(svg, "</svg>"))
       .catch(unreachable);
   },
+  disableOpSanitizer: true, // Cannot terminate Worker from main thread
 });
 
 Deno.test({
@@ -44,7 +45,7 @@ Deno.test({
 
         return viz.renderString(dot + "}");
       })
-      .then(svg => assertStrContains(svg, "</svg>"))
+      .then((svg: string) => assertStrContains(svg, "</svg>"))
       .catch(unreachable);
   },
 });
