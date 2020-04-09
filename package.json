@@ -11,6 +11,7 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     },
+    "./sync": "./dist/renderSync.js",
     "./wasm": "./dist/render.wasm",
     "./worker": {
       "import": "./dist/render.node.mjs",
@@ -31,6 +32,7 @@
   ],
   "files": [
     "dist/",
+    "sync/",
     "wasm",
     "worker"
   ],

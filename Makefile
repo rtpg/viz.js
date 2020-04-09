@@ -55,6 +55,9 @@ all: \
 		dist \
 			dist/index.cjs dist/index.mjs dist/index.d.ts dist/types.d.ts \
 			dist/render.node.mjs dist/render.browser.js dist/render.wasm \
+			dist/renderSync.js \
+	 	sync \
+		 	sync/index.js sync/index.d.ts \
 	 	wasm \
 		worker \
 
@@ -142,7 +145,7 @@ deps: expat-full graphviz-full $(YARN_PATH)
 .NOTPARALLEL: clean
 clean:
 	@echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
-	rm -rf build dist
+	rm -rf build dist sync
 	rm -f wasm worker
 	rm -f test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
 
@@ -150,8 +153,18 @@ clean:
 clobber: | clean
 	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
 
+sync/index.js: | sync
+	echo "module.exports=require('../dist/renderSync.js')" > $@
+sync/index.d.ts: dist/renderSync.d.ts | sync
+	echo 'export {default} from "../dist/renderSync"' > $@
+dist/renderSync.d.ts: src/renderSync.ts | dist
+	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $<
+
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
+
+build/renderFunction.js: src/renderFunction.ts | build
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
 build/worker.js: src/worker.ts | build
 	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
@@ -222,12 +235,22 @@ build/render.js: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
+build/asm.mjs: src/viz.cpp | build
+	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
+	$(CC) $(CC_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0 -Oz -o $@ $< $(CC_INCLUDES)
+
+build/renderSync.js: src/renderSync.ts | build
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
+
+dist/renderSync.js: build/renderSync.js build/asm.mjs build/renderFunction.js
+	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
+
 test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 	echo "export default Uint16Array.from([" > $@ && \
 	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
 	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
 
-$(PREFIX_FULL) build dist sources $(YARN_DIR):
+$(PREFIX_FULL) build dist sources sync $(YARN_DIR):
 	mkdir -p $@
 
 .PHONY: expat–full

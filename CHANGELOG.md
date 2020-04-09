@@ -11,15 +11,16 @@
 - The library is able to reset its internal error state, which makes the
   [v2 wiki caveat](https://github.com/mdaines/viz.js/wiki/Caveats#rendering-graphs-with-user-input)
   unnecessary.
-- Rendering from main thread is no longer supported, you must use a worker
-  (webworker or worker_thread).
+- Rendering from main thread is no longer supported on the default async API,
+  you must use a worker (webworker or worker_thread).
 - The JS code is now transpiled from TypeScript, and typings are packed within
   the npm package. You can find the API documentation there!
+- There is a synchronous version available for legacy Node.js support.
 
 ##### Breaking changes and deprecations
 
 - **BREAKING:** Bump required version of Node.js to v12 LTS (might work on v10
-  LTS using CLI flags).
+  LTS using CLI flags or the synchronous API).
 - **BREAKING:** Remove `Viz.prototype.renderSVGElement`. You can use
   `renderString` and `DOMParser` to achieve the same result.
 - **BREAKING:** Remove `Viz.prototype.renderImageElement`. You can use
@@ -40,7 +41,9 @@
   `package.json`#`exports`, you can use the specifier `@aduh95/viz.js/worker`.
 - **BREAKING:** Compiles to WebAssembly, which cannot be bundled in the
   `render.js` file like asm.js used to. Depending on your bundling tool, you may
-  need some extra config to make everything work.
+  need some extra config to make everything work. You might also use the
+  synchronous API, which bundles the asm.js code, although its usage should be
+  strictly limited to Node.js or webworker use.
 - **BREAKING:** Remove ES5 and CJS dist files, all modern browsers now support
   ES2015 modules. If you want to support an older browser, you would need to
   transpile it yourself or use an older version.
@@ -52,7 +55,7 @@
 ##### Added features
 
 - Add support for Node.js `worker_threads`.
-- Refactor JS files to Typescript.
+- Refactor JS files to TypeScript.
 - Refactor `viz.c` to C++ to use
   [Emscripten's Embind](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html).
 - Use `ALLOW_MEMORY_GROW` compiler option to avoid failing on large graphs.
@@ -61,6 +64,7 @@
   - Remove the need of creating new instances when render fails by resetting
     internal error state.
 - Switch to Mocha and Puppeteer for browser testing.
+- Add synchronous API using asm.js.
 - Upgrade deps:
   - Upgrade Emscripten to 1.39.12
   - Upgrade Graphviz to 2.44.0
