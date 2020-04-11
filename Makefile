@@ -9,13 +9,18 @@ EMSCRIPTEN_VERSION = 1.38.44
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
+YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
 EMCC ?= emcc
 CC = $(EMCC)
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-TSC ?= yarn tsc
+YARN_PATH = $(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml)
+YARN_DIR = $(shell dirname $(YARN_PATH))
+YARN ?= node $(YARN_PATH)
+
+TSC ?= $(YARN) tsc
 TS_FLAGS = --lib esnext,WebWorker
 
 DENO ?= deno
@@ -26,12 +31,12 @@ PREAMBLE = "/**\n\
 BEAUTIFY?=false
 
 ifeq ($(BEAUTIFY), false)
-	TERSER = yarn terser --warn -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)'
+	TERSER = $(YARN) terser --warn -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)'
 else
-	TERSER = yarn terser --warn -b
+	TERSER = $(YARN) terser --warn -b
 endif
 
-MOCHA ?= yarn mocha
+MOCHA ?= $(YARN) mocha
 
 .PHONY: all
 all: \
@@ -56,7 +61,7 @@ publish:
 	npm version $(VIZ_VERSION)
 	$(MAKE) clean
 	$(MAKE) test -j4 || (git reset HEAD^ --hard && git tag -d v$(VIZ_VERSION) && exit 1)
-	yarn pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
+	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
 	npm publish --access public
 	git push && git push --tags
 
@@ -67,8 +72,8 @@ debug:
 	BEAUTIFY=true $(MAKE) all
 
 .PHONY: deps
-deps: | expat-full graphviz-full
-	yarn install
+deps: $(YARN_PATH) | expat-full graphviz-full
+	$(YARN) install
 
 .PHONY: clean
 clean:
@@ -80,10 +85,7 @@ clean:
 
 .PHONY: clobber
 clobber: | clean
-	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE) node_modules
-
-dist:
-	mkdir -p $(DIST_FOLDER)
+	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
 
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
@@ -122,7 +124,7 @@ build/render: build/render.js
 	})}" >> $@
 
 build/render.rollup.js: build/worker.js build/render 
-	yarn rollup -f esm $< > $@
+	$(YARN) rollup -f esm $< > $@
 
 build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
 	cat $^ > $@
@@ -159,8 +161,8 @@ test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
 	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
 
-$(PREFIX_FULL):
-	mkdir -p $(PREFIX_FULL)
+$(PREFIX_FULL) dist sources $(YARN_DIR):
+	mkdir -p $@
 
 .PHONY: expat–full
 expat-full: | build-full/expat-$(EXPAT_VERSION) $(PREFIX_FULL)
@@ -189,11 +191,11 @@ build-full/graphviz-$(GRAPHVIZ_VERSION): sources/graphviz-$(GRAPHVIZ_VERSION).ta
 	mkdir -p $@
 	tar -zxf sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz --strip-components 1 -C $@
 
-sources:
-	mkdir -p sources
-
 sources/expat-$(EXPAT_VERSION).tar.bz2: | sources
 	curl --fail --location $(EXPAT_SOURCE_URL) -o $@
 
 sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz: | sources
 	curl --fail --location $(GRAPHVIZ_SOURCE_URL) -o $@
+
+$(YARN_PATH): $(YARN_DIR)
+	curl -L $(YARN_SOURCE_URL) > $@

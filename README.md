@@ -202,13 +202,12 @@ As Deno aims to expose all the web API, you can use the browser implementation.
 
 To build from source, first
 [install the Emscripten SDK](http://kripken.github.io/emscripten-site/docs/getting_started/index.html).
-You'll also need [Node.js 13+](https://nodejs.org/) and
-[Yarn 2+](https://yarnpkg.com).
+You'll also need [Node.js 13+](https://nodejs.org/).
 
-On macOS:
+Using Homebrew (macOS or GNU/Linux):
 
 ```shell
-brew install yarn binaryen emscripten automake libtool pkg-config qt
+brew install node binaryen emscripten automake libtool pkg-config qt
 ```
 
 You will certainly need to tweak config files to make sure your system knows
