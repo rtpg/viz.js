@@ -5,7 +5,7 @@ DIST_FOLDER = $(abspath ./dist)
 VIZ_VERSION ?= $(shell node -p "require('./package.json').version")
 EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.45.20200410.2133
-EMSCRIPTEN_VERSION = 1.38.44
+EMSCRIPTEN_VERSION = 1.39.11
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"

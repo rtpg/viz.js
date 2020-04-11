@@ -210,6 +210,10 @@ Using Homebrew (macOS or GNU/Linux):
 brew install node binaryen emscripten automake libtool pkg-config qt
 ```
 
+> Note: Emscripten version number is pinned in the Makefile. If you are willing
+> to use a different version, you'd need to change the Makefile variable to
+> match the version you are using.
+
 You will certainly need to tweak config files to make sure your system knows
 where it should find each binary.
 
