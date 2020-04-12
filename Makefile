@@ -11,6 +11,8 @@ EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
+EMCONFIGURE ?= emconfigure
+EMMAKE ?= emmake
 EMCC ?= emcc
 CC = $(EMCC)
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
@@ -27,6 +29,12 @@ DENO ?= deno
 
 PREAMBLE = "/**\n\
  * Viz.js $(VIZ_VERSION) (Graphviz $(GRAPHVIZ_VERSION), Expat $(EXPAT_VERSION), Emscripten $(EMSCRIPTEN_VERSION))\n\
+ * @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt MIT licensed\n\
+ *\n\
+ * This distribution contains other software in object code form:\n\
+ * - [Emscripten](https://github.com/emscripten-core/emscripten/blob/master/LICENSE)\n\
+ * - [Expat](https://github.com/libexpat/libexpat/blob/master/expat/COPYING)\n\
+ * - [Graphviz](https://graphviz.org/license/)\n\
  */"
 BEAUTIFY?=false
 
@@ -37,6 +45,7 @@ else
 endif
 
 MOCHA ?= $(YARN) mocha
+ROLLUP ?= $(YARN) rollup
 
 .PHONY: all
 all: \
@@ -124,7 +133,7 @@ build/render: build/render.js
 	})}" >> $@
 
 build/render.rollup.js: build/worker.js build/render 
-	$(YARN) rollup -f esm $< > $@
+	$(ROLLUP) -f esm $< > $@
 
 build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
 	cat $^ > $@
@@ -165,31 +174,31 @@ $(PREFIX_FULL) dist sources $(YARN_DIR):
 	mkdir -p $@
 
 .PHONY: expat–full
-expat-full: | build-full/expat-$(EXPAT_VERSION) $(PREFIX_FULL)
-	grep $(EXPAT_VERSION) build-full/expat-$(EXPAT_VERSION)/expat_config.h
-	cd build-full/expat-$(EXPAT_VERSION) && emconfigure ./configure --quiet --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
-	cd build-full/expat-$(EXPAT_VERSION) && emmake make --quiet -C lib all install
+expat-full: build-full/expat-$(EXPAT_VERSION) | $(PREFIX_FULL)
+	grep $(EXPAT_VERSION) $</expat_config.h
+	cd $< && $(EMCONFIGURE) ./configure --quiet --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
+	cd $< && $(EMMAKE) $(MAKE) --quiet -C lib all install
 
 .PHONY: graphviz-full
-graphviz-full: | build-full/graphviz-$(GRAPHVIZ_VERSION) $(PREFIX_FULL)
-	grep $(GRAPHVIZ_VERSION) build-full/graphviz-$(GRAPHVIZ_VERSION)/graphviz_version.h
-	cd build-full/graphviz-$(GRAPHVIZ_VERSION) && ./configure --quiet
-	cd build-full/graphviz-$(GRAPHVIZ_VERSION)/lib/gvpr && make --quiet mkdefs CFLAGS="-w"
-	mkdir -p build-full/graphviz-$(GRAPHVIZ_VERSION)/FEATURE
-	cp hacks/FEATURE/sfio hacks/FEATURE/vmalloc build-full/graphviz-$(GRAPHVIZ_VERSION)/FEATURE
-	cd build-full/graphviz-$(GRAPHVIZ_VERSION) && emconfigure ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
-	cd build-full/graphviz-$(GRAPHVIZ_VERSION) && emmake make --quiet lib plugin
-	cd build-full/graphviz-$(GRAPHVIZ_VERSION)/lib && emmake make --quiet install
-	cd build-full/graphviz-$(GRAPHVIZ_VERSION)/plugin && emmake make --quiet install
+graphviz-full: build-full/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
+	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
+	cd $< && ./configure --quiet
+	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
+	mkdir -p $</FEATURE
+	cp hacks/FEATURE/sfio hacks/FEATURE/vmalloc $</FEATURE
+	cd $< && $(EMCONFIGURE) ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
+	cd $< && $(EMMAKE) $(MAKE) --quiet lib plugin
+	cd $</lib && $(EMMAKE) $(MAKE) --quiet install
+	cd $</plugin && $(EMMAKE) $(MAKE) --quiet install
 
 
 build-full/expat-$(EXPAT_VERSION): sources/expat-$(EXPAT_VERSION).tar.bz2
 	mkdir -p $@
-	tar -jxf sources/expat-$(EXPAT_VERSION).tar.bz2 --strip-components 1 -C $@
+	tar -jxf $< --strip-components 1 -C $@
 
 build-full/graphviz-$(GRAPHVIZ_VERSION): sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz
 	mkdir -p $@
-	tar -zxf sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz --strip-components 1 -C $@
+	tar -zxf $< --strip-components 1 -C $@
 
 sources/expat-$(EXPAT_VERSION).tar.bz2: | sources
 	curl --fail --location $(EXPAT_SOURCE_URL) -o $@
@@ -198,4 +207,4 @@ sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz: | sources
 	curl --fail --location $(GRAPHVIZ_SOURCE_URL) -o $@
 
 $(YARN_PATH): $(YARN_DIR)
-	curl -L $(YARN_SOURCE_URL) > $@
+	curl --fail --location $(YARN_SOURCE_URL) -o $@
