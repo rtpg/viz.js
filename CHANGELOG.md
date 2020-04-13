@@ -5,8 +5,8 @@
 ##### Notable changes
 
 - The library is now compiled to WASM, which shrinks the file size (Viz.js
-  (2.1.2 full version) brotlified: 409K; @aduh95/viz.js (3.0.0-beta.5 browser
-  version) brotlified: 368K; 10% decrease), should improve performances and
+  (2.1.2 full version) brotlified: 409K; @aduh95/viz.js (3.0.0-beta.7 browser
+  version) brotlified: 337K; 18% decrease), should improve performances and
   allows dynamic memory growth.
 - The library is able to reset its internal error state, which makes the
   [v2 wiki caveat](https://github.com/mdaines/viz.js/wiki/Caveats#rendering-graphs-with-user-input)
@@ -62,7 +62,7 @@
     internal error state.
 - Switch to Mocha and Puppeteer for browser testing.
 - Upgrade deps:
-  - Upgrade Emscripten to 1.38.44
+  - Upgrade Emscripten to 1.39.12
   - Upgrade Graphviz to 2.43.x (unstable)
   - Upgrade Expat to 2.2.9
   - Upgrade Mocha to 7.0.1

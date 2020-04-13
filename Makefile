@@ -5,7 +5,7 @@ DIST_FOLDER = $(abspath ./dist)
 VIZ_VERSION ?= $(shell node -p "require('./package.json').version")
 EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.45.20200410.2133
-EMSCRIPTEN_VERSION = 1.39.11
+EMSCRIPTEN_VERSION = 1.39.12
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/f4e30e65c1b2f510412d62e81e30c27dd7665861/graphviz-f4e30e65c1b2f510412d62e81e30c27dd7665861.tar.gz"
@@ -186,6 +186,10 @@ graphviz-full: build-full/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
 	mkdir -p $</FEATURE
 	cp hacks/FEATURE/sfio hacks/FEATURE/vmalloc $</FEATURE
+	[ `uname` != 'Darwin' ] || [ -f $</configure.ac.old ] || (\
+		cp $</configure.ac $</configure.ac.old && \
+		sed '/-headerpad_max_install_names/d' $</configure.ac.old > $</configure.ac \
+	)
 	cd $< && $(EMCONFIGURE) ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
 	cd $< && $(EMMAKE) $(MAKE) --quiet lib plugin
 	cd $</lib && $(EMMAKE) $(MAKE) --quiet install
