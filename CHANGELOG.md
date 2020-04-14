@@ -63,7 +63,7 @@
 - Switch to Mocha and Puppeteer for browser testing.
 - Upgrade deps:
   - Upgrade Emscripten to 1.39.12
-  - Upgrade Graphviz to 2.43.x (unstable)
+  - Upgrade Graphviz to 2.44.0
   - Upgrade Expat to 2.2.9
   - Upgrade Mocha to 7.0.1
 
