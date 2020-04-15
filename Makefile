@@ -2,7 +2,9 @@ PREFIX_FULL = $(abspath ./prefix-full)
 PREFIX_LITE = $(abspath ./prefix-lite)
 DIST_FOLDER = $(abspath ./dist)
 
-VIZ_VERSION ?= $(shell node -p "require('./package.json').version")
+NODE ?= node
+
+VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)
 EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.0
 EMSCRIPTEN_VERSION = 1.39.12
@@ -18,9 +20,9 @@ CC = $(EMCC)
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-YARN_PATH = $(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml)
+YARN_PATH = $(shell $(NODE) -p 'path.resolve($(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))')
 YARN_DIR = $(shell dirname $(YARN_PATH))
-YARN ?= node $(YARN_PATH)
+YARN ?= $(NODE) $(YARN_PATH)
 
 TSC ?= $(YARN) tsc
 TS_FLAGS = --lib esnext,WebWorker
@@ -65,13 +67,17 @@ test: all
 deno-test: test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
 	$(DENO) --importmap test/deno-files/importmap.json test/deno.ts
 
+.PHONY: pack
+pack: all
+	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
+
 .PHONY: publish
 publish:
 	npm version $(VIZ_VERSION)
 	$(MAKE) clean
 	$(MAKE) test -j4 || (git reset HEAD^ --hard && git tag -d v$(VIZ_VERSION) && exit 1)
-	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
-	npm publish --access public
+	$(MAKE) pack
+	$(YARN) npm publish --access public
 	git push && git push --tags
 
 .PHONY: debug
@@ -90,7 +96,6 @@ clean:
 	rm -rf build dist
 	rm -f wasm worker
 	rm -f test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
-	mkdir build dist
 
 .PHONY: clobber
 clobber: | clean
@@ -99,11 +104,11 @@ clobber: | clean
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build/worker.js: src/worker.ts
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $^
+build/worker.js: src/worker.ts build
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
-build/index.js: src/index.ts
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $^
+build/index.js: src/index.ts build
+	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
 dist/index.d.ts: src/index.ts
 	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
@@ -161,7 +166,7 @@ build/render.wasm: build/render.js
 dist/render.wasm: build/render.wasm
 	cp $< $@
 
-build/render.js: src/viz.cpp
+build/render.js: src/viz.cpp build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
@@ -170,7 +175,7 @@ test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
 	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
 
-$(PREFIX_FULL) dist sources $(YARN_DIR):
+$(PREFIX_FULL) build dist sources $(YARN_DIR):
 	mkdir -p $@
 
 .PHONY: expat–full

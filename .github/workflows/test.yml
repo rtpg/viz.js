@@ -20,26 +20,38 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt update
+      - name: Install utilities
+        run:
+          sudo apt install -y automake build-essential git pkg-config python
+          python-pip unzip
+      - name: Setup emsdk (use cache if found, create otherwise)
+        uses: mymindstorm/setup-emsdk@v2
+        with:
+          version: 1.39.12
       - name: Install Node.js 13
         uses: actions/setup-node@v1
         env:
           RUNNER_TEMP: /tmp
         with:
           node-version: "13.x"
-      - run: apt update
-      - name: install utilities
-        run:
-          apt install -y automake build-essential git pkg-config python
-          python-pip unzip
-      - name: Setup emsdk (use cache if found, create otherwise)
-        uses: mymindstorm/setup-emsdk@v2
-        with:
-          version: 1.39.12
       - name: Setup Deno latest
-        run: curl -fsSL https://deno.land/x/install/install.sh | sh
-      - name: download deps
+        run:
+          curl -fsSL https://deno.land/x/install/install.sh | sudo
+          DENO_INSTALL=/usr/local sh
+      - name: Download and build dependencies
         run: make deps
         env:
           CI: true
-      - name: tests
+      - name: Build and pack Viz.js
+        run: make pack -j4
+        env:
+          VIZ_VERSION: unreleased-${{ github.sha }}
+      - name: Run tests
         run: make test -j4
+      - name: Upload artifact if tests are green
+        if: success()
+        uses: actions/upload-artifact@v1
+        with:
+          name: viz.js-unreleased-${{ github.sha }}.tar.gz
+          path: sources/viz.js-vunreleased-${{ github.sha }}.tar.gz

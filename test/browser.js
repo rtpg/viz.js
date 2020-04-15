@@ -22,16 +22,17 @@ describe("Test graph rendering using web browser", function() {
    */
   let page;
 
-  before(() =>
-    Promise.all([
-      import("./web-server/bootstrap.mjs").then(module => {
+  before(function () {
+    this.timeout(18000);
+    return Promise.all([
+      import("./web-server/bootstrap.mjs").then((module) => {
         server = module.default();
       }),
       puppeteer.launch(PUPPETEER_OPTIONS).then(b => {
         browser = b;
       }),
-    ])
-  );
+    ]);
+  });
 
   after(() => Promise.all([server.close(), browser.close()]));
 
