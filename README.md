@@ -23,10 +23,10 @@ const viz = new Viz({ worker });
 
 viz
   .renderString("digraph{1 -> 2 }")
-  .then(svgString => {
+  .then((svgString) => {
     console.log(svgString);
   })
-  .catch(error => {
+  .catch((error) => {
     console.error(error);
   })
   .finally(() => {
@@ -40,8 +40,10 @@ imports:
 
 ```js
 async function dot2svg(dot, options = {}) {
-  const Viz = await import("@aduh95/viz.js").then(m => m.default);
-  const getWorker = await import("@aduh95/viz.js/worker").then(m => m.default);
+  const Viz = await import("@aduh95/viz.js").then((m) => m.default);
+  const getWorker = await import("@aduh95/viz.js/worker").then(
+    (m) => m.default
+  );
 
   const worker = getWorker();
   const viz = new Viz({ worker });
@@ -105,9 +107,9 @@ there is a workaround:
 ```js
 import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6";
 
-const locateFile = fileName =>
+const locateFile = (fileName) =>
   "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist/" + fileName;
-const onmessage = async function(event) {
+const onmessage = async function (event) {
   if (this.messageHandler === undefined) {
     // Lazy loading actual handler
     const { default: init, onmessage } = await import(
@@ -156,7 +158,7 @@ function getVizMessageHandler() {
     const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist";
     const Module = {
       // locateFile is used by render module to locate WASM file.
-      locateFile: fileName => `${vizDistFolder}/${fileName}`,
+      locateFile: (fileName) => `${vizDistFolder}/${fileName}`,
     };
     this._messageHandler = import(Module.locateFile("render.browser.js")).then(
       ({ default: init, onmessage }) => {
@@ -170,12 +172,12 @@ function getVizMessageHandler() {
   return this._messageHandler;
 }
 
-self.addEventListener("message", event => {
+self.addEventListener("message", (event) => {
   if (event.data.id) {
     // handling event sent by viz.js
     getVizMessageHandler()
-      .then(onmessage => onmessage(event))
-      .catch(error => {
+      .then((onmessage) => onmessage(event))
+      .catch((error) => {
         // handle dynamic import error here
         console.error(error);
 
@@ -201,13 +203,14 @@ As Deno aims to expose all the web API, you can use the browser implementation.
 ## Building From Source
 
 To build from source, first
-[install the Emscripten SDK](http://kripken.github.io/emscripten-site/docs/getting_started/index.html).
-You'll also need [Node.js 13+](https://nodejs.org/).
+[install the Emscripten SDK](https://emscripten.org/docs/getting_started/index.html).
+You'll also need [Node.js 13+](https://nodejs.org/) and
+[Deno](https://deno.land/) to run the tests.
 
 Using Homebrew (macOS or GNU/Linux):
 
 ```shell
-brew install node binaryen emscripten automake libtool pkg-config qt
+brew install node automake libtool pkg-config
 ```
 
 > Note: Emscripten version number is pinned in the Makefile. If you are willing
