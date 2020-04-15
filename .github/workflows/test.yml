@@ -1,0 +1,45 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [13.x]
+        deno: [0.40.0]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Node.js 13
+        uses: actions/setup-node@v1
+        env:
+          RUNNER_TEMP: /tmp
+        with:
+          node-version: "13.x"
+      - run: apt update
+      - name: install utilities
+        run:
+          apt install -y automake build-essential git pkg-config python
+          python-pip unzip
+      - name: Setup emsdk (use cache if found, create otherwise)
+        uses: mymindstorm/setup-emsdk@v2
+        with:
+          version: 1.39.12
+      - name: Setup Deno latest
+        run: curl -fsSL https://deno.land/x/install/install.sh | sh
+      - name: download deps
+        run: make deps
+        env:
+          CI: true
+      - name: tests
+        run: make test -j4
