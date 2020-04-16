@@ -1,6 +1,6 @@
 # Viz.js
 
-[![Build Status](https://travis-ci.org/mdaines/viz.js.svg?branch=master)](https://travis-ci.org/mdaines/viz.js)
+[![CI](https://github.com/aduh95/viz.js/workflows/CI/badge.svg)](https://github.com/aduh95/viz.js/actions)
 
 This project builds [Graphviz](http://www.graphviz.org) with
 [Emscripten](http://kripken.github.io/emscripten-site/) and provides a simple

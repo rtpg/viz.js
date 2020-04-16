@@ -1,7 +1,7 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Test
+name: CI
 
 on:
   push:
@@ -15,8 +15,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [13.x]
-        deno: [0.40.0]
+        node: [13.x]
+        deno: [v0.40.0]
 
     steps:
       - uses: actions/checkout@v2
@@ -25,20 +25,32 @@ jobs:
         run:
           sudo apt install -y automake build-essential git pkg-config python
           python-pip unzip
+      - name: Cache emsdk
+        uses: actions/cache@v1
+        id: cache # This is important!
+        with:
+          # Set to the same folder as actions-cache-folder (more below)
+          path: "emsdk-cache"
+          # Set the end bit to emsdk version
+          key: ${{ runner.os }}-emsdk-1.39.12
       - name: Setup emsdk (use cache if found, create otherwise)
         uses: mymindstorm/setup-emsdk@v2
         with:
           version: 1.39.12
-      - name: Install Node.js 13
+          actions-cache-folder: "emsdk-cache"
+          # This stops it from using tc.cacheDir since we are using
+          #  actions/cache.
+          no-cache: true
+      - name: Install Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         env:
           RUNNER_TEMP: /tmp
         with:
-          node-version: "13.x"
-      - name: Setup Deno latest
+          node-version: ${{ matrix.node }}
+      - name: Install Deno ${{ matrix.deno }}
         run:
           curl -fsSL https://deno.land/x/install/install.sh | sudo
-          DENO_INSTALL=/usr/local sh
+          DENO_INSTALL=/usr/local sh -s ${{ matrix.deno }}
       - name: Download and build dependencies
         run: make deps
         env:

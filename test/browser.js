@@ -6,16 +6,18 @@ args[args.findIndex(flag => /enable-features/.test(flag))] +=
   ",ExperimentalProductivityFeatures,ImportMaps";
 const PUPPETEER_OPTIONS = { args };
 
+const closableMock = { close: Function.prototype };
+
 describe("Test graph rendering using web browser", function() {
   /**
    * @type {{close:Promise<void>, port: Promise<number>}}
    */
-  let server;
+  let server = closableMock;
 
   /**
    * @type {Browser}
    */
-  let browser;
+  let browser = closableMock;
 
   /**
    * @type {Page}
