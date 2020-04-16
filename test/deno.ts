@@ -4,20 +4,6 @@ import { assertStrContains, unreachable } from "std::testing";
 import Viz from "@aduh95/viz.js";
 const workerURL = "./deno-files/worker.js";
 
-{
-  const { addEventListener } = Worker.prototype as any;
-  (Worker as any).prototype.addEventListener = function (
-    eventType: string,
-    handler: Function
-  ) {
-    if ("message" === eventType) {
-      this.onmessage = handler;
-    } else {
-      addEventListener.apply(this, arguments);
-    }
-  };
-}
-
 Deno.test({
   name: "Test graph rendering using Deno",
   fn(): Promise<any> {
@@ -26,7 +12,6 @@ Deno.test({
       .then((svg) => assertStrContains(svg, "</svg>"))
       .catch(unreachable);
   },
-  disableOpSanitizer: true, // Cannot terminate Worker from main thread
 });
 
 Deno.test({
@@ -41,6 +26,7 @@ Deno.test({
     return viz
       .renderString(dot + "}")
       .then(() => {
+        i++;
         dot += `node${i} -> node${i + 1};`;
 
         return viz.renderString(dot + "}");

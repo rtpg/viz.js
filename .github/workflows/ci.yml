@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         node: [13.x]
-        deno: [v0.40.0]
+        deno: [v0.41.0]
 
     steps:
       - uses: actions/checkout@v2

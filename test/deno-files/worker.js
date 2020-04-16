@@ -5,14 +5,15 @@ import {
 } from "../../dist/render.browser.js";
 import wasmBinary from "./render.wasm.arraybuffer.js";
 
-onmessage = function(m) {
+removeEventListener("message", o);
+
+onmessage = function (m) {
   initWASM({
     wasmBinary,
   })
     .then(() => o(m))
     .catch(console.error)
     .finally(() => {
-      // Close worker asynchronously
-      setTimeout(() => close(), 99);
+      self.close();
     });
 };
