@@ -46,7 +46,7 @@
   "devDependencies": {
     "@types/node": "^13.5.3",
     "mocha": "^7.0.0",
-    "puppeteer": "^2.0.0",
+    "puppeteer": "^3.0.0",
     "rollup": "^2.4.0",
     "terser": "^4.6.3",
     "typescript": "^3.8.0-beta"

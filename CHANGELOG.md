@@ -65,7 +65,10 @@
   - Upgrade Emscripten to 1.39.12
   - Upgrade Graphviz to 2.44.0
   - Upgrade Expat to 2.2.9
-  - Upgrade Mocha to 7.0.1
+  - Upgrade Rollup to 2.x
+- Change test chain:
+  - Upgrade Mocha to 7.1.1
+  - Use Puppeteer instead of Selenium
 
 ### Viz.js v2.1.2 (2018-12-08)
 
