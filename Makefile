@@ -92,10 +92,11 @@ debug:
 	BEAUTIFY=true $(MAKE) all
 
 .PHONY: deps
-deps: $(YARN_PATH) | expat-full graphviz-full
+deps: expat-full graphviz-full $(YARN_PATH)
 	$(YARN) install
 
 .PHONY: clean
+.NOTPARALLEL: clean
 clean:
 	@echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
 	rm -rf build dist
@@ -109,10 +110,10 @@ clobber: | clean
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build/worker.js: src/worker.ts build
+build/worker.js: src/worker.ts | build
 	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
-build/index.js: src/index.ts build
+build/index.js: src/index.ts | build
 	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
 dist/index.d.ts: src/index.ts
@@ -171,7 +172,7 @@ build/render.wasm: build/render.js
 dist/render.wasm: build/render.wasm
 	cp $< $@
 
-build/render.js: src/viz.cpp build
+build/render.js: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
@@ -220,5 +221,5 @@ sources/expat-$(EXPAT_VERSION).tar.bz2: | sources
 sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz: | sources
 	curl --fail --location $(GRAPHVIZ_SOURCE_URL) -o $@
 
-$(YARN_PATH): $(YARN_DIR)
+$(YARN_PATH): | $(YARN_DIR)
 	curl --fail --location $(YARN_SOURCE_URL) -o $@
