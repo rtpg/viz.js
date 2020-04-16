@@ -65,11 +65,11 @@ test: all
 
 .PHONY: deno-test
 ifdef DENO
-deno-test: test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
+deno-test: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
 	$(DENO) --importmap test/deno-files/importmap.json test/deno.ts
 else
 deno-test:
-	@echo "Deno tests disabled by environment"
+	@echo "Deno tests are disabled by environment."
 endif
 
 .PHONY: pack
