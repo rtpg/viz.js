@@ -1,0 +1,11 @@
+{
+  "env": { "node": true, "mocha": true, "es2020": true },
+  "extends": ["plugin:prettier/recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "rules": {
+    "no-implicit-globals": "error",
+    "no-undef": "error"
+  }
+}

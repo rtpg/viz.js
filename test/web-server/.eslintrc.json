@@ -1,0 +1,6 @@
+{
+  "env": { "mocha": false },
+  "parserOptions": {
+    "sourceType": "module"
+  }
+}

@@ -16,6 +16,6 @@ export type WebAssemblyModule = {
  * Resolves once runtime has been initialized and you can call wasm functions
  * @param Module An object to initialize Emscripten Module
  */
-export default function(
+export default function (
   Module: EMCCModuleOverrides
 ): Promise<WebAssemblyModule>;

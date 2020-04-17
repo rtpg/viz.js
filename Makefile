@@ -46,6 +46,7 @@ else
 	TERSER = $(YARN) terser --warn -b
 endif
 
+ESLINT ?= $(YARN) eslint
 MOCHA ?= $(YARN) mocha
 ROLLUP ?= $(YARN) rollup
 
@@ -59,9 +60,20 @@ all: \
 
 
 .PHONY: test
-test: all
+test: all lint
 	$(MOCHA) $@
 	$(MAKE) deno-test
+
+.PHONY: lint
+lint: lint-ts lint-test
+
+.PHONY: lint-ts
+lint-ts:
+	$(ESLINT) src --ext .ts
+
+.PHONY: lint-test
+lint-test:
+	$(ESLINT) test
 
 .PHONY: deno-test
 ifdef DENO

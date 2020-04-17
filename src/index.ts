@@ -27,7 +27,7 @@ class WorkerWrapper {
     }
   }
 
-  _eventListener(event: MessageEvent) {
+  _eventListener(event: MessageEvent): void {
     const { id, error, result } = event.data as RenderResponse;
 
     this._listeners[id](error, result);
@@ -40,13 +40,13 @@ class WorkerWrapper {
 
   render(src: string, options: RenderOptions): Promise<string> {
     return new Promise((resolve, reject) => {
-      let id = this._nextId++;
+      const id = this._nextId++;
 
       if (this._isNodeWorker && this._executing++ === 0) {
         (this._worker as NodeJSWorker).ref();
       }
 
-      this._listeners[id] = function (error, result) {
+      this._listeners[id] = function (error, result): void {
         if (error) {
           const e = new Error(error.message);
           if (error.fileName) (e as any).fileName = error.fileName;
@@ -60,7 +60,7 @@ class WorkerWrapper {
     });
   }
 
-  terminate() {
+  terminate(): Promise<number> | void {
     return this._worker.terminate();
   }
 }
@@ -190,7 +190,7 @@ class Viz {
   /**
    * Terminates the worker, clearing all on-going work.
    */
-  terminateWorker() {
+  terminateWorker(): Promise<number> | void {
     return this._wrapper.terminate();
   }
 }

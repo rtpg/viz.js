@@ -11,6 +11,8 @@ import initializeWasm, {
   EMCCModuleOverrides,
 } from "./render";
 
+/* eslint-disable no-var */
+//
 // Emscripten "magic" globals
 declare var ENVIRONMENT_IS_WORKER: boolean;
 declare var ENVIRONMENT_IS_NODE: boolean;
@@ -18,27 +20,81 @@ declare var ENVIRONMENT_IS_NODE: boolean;
 // Worker global functions
 declare var postMessage: (data: RenderResponse) => void;
 declare var addEventListener: (type: "message", data: EventListener) => void;
+//
+/* eslint-enable no-var */
 
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore: exports must be declared in order to produce valid ES6 code
 let exports: (
   moduleOverrides?: EMCCModuleOverrides
 ) => Promise<EMCCModuleOverrides> | Worker;
 
 let asyncModuleOverrides: Promise<EMCCModuleOverrides>;
 let Module: WebAssemblyModule;
-async function getModule() {
+async function getModule(): Promise<WebAssemblyModule> {
   if (Module === undefined) {
     Module = await asyncModuleOverrides.then(initializeWasm);
   }
   return Module;
 }
 
+function render(
+  Module: WebAssemblyModule,
+  src: string,
+  options: RenderOptions
+): string {
+  for (const { path, data } of options.files) {
+    Module.vizCreateFile(path, data);
+  }
+
+  Module.vizSetY_invert(options.yInvert ? 1 : 0);
+  Module.vizSetNop(options.nop || 0);
+
+  const resultString = Module.vizRenderFromString(
+    src,
+    options.format,
+    options.engine
+  );
+
+  const errorMessageString = Module.vizLastErrorMessage();
+
+  if (errorMessageString !== "") {
+    throw new Error(errorMessageString);
+  }
+
+  return resultString;
+}
+
+export function onmessage(event: MessageEvent): Promise<void> {
+  const { id, src, options } = event.data as RenderRequest;
+
+  return getModule()
+    .then((Module) => {
+      const result = render(Module, src, options);
+      postMessage({ id, result });
+    })
+    .catch((e) => {
+      const error: SerializedError =
+        e instanceof Error
+          ? {
+              message: e.message,
+              fileName: (e as any).fileName,
+              lineNumber: (e as any).lineNumber,
+            }
+          : { message: e.toString() };
+
+      postMessage({ id, error });
+    });
+}
+
 if (ENVIRONMENT_IS_WORKER) {
   let resolveModuleOverrides: Function;
-  asyncModuleOverrides = new Promise(done => {
+  asyncModuleOverrides = new Promise((done) => {
     resolveModuleOverrides = done;
   });
-  exports = (moduleOverrides: EMCCModuleOverrides) => {
+  exports = (
+    moduleOverrides: EMCCModuleOverrides
+  ): Promise<EMCCModuleOverrides> => {
     if (resolveModuleOverrides) {
       resolveModuleOverrides(moduleOverrides);
       return asyncModuleOverrides;
@@ -55,7 +111,7 @@ if (ENVIRONMENT_IS_WORKER) {
     isMainThread,
     Worker,
     workerData,
-  } = require("worker_threads");
+  } = require("worker_threads"); // eslint-disable-line
   if (isMainThread) {
     asyncModuleOverrides = {
       then() {
@@ -64,7 +120,7 @@ if (ENVIRONMENT_IS_WORKER) {
         );
       },
     } as Promise<never>;
-    exports = moduleOverrides =>
+    exports = (moduleOverrides): Worker =>
       new Worker(__filename, {
         type: "module",
         workerData: { __filename, moduleOverrides },
@@ -77,18 +133,17 @@ if (ENVIRONMENT_IS_WORKER) {
     parentPort.on("message", (data: RenderResponse) =>
       onmessage({ data } as MessageEvent)
     );
-    postMessage = function() {
-      "use strict";
-      return parentPort.postMessage.apply(parentPort, arguments);
-    };
+    postMessage = parentPort.postMessage.bind(parentPort);
   } else {
     // Worker spawned by another module or script, exports a function that lets
     // user define a custom override objects.
     let resolveModuleOverrides: Function;
-    asyncModuleOverrides = new Promise(done => {
+    asyncModuleOverrides = new Promise((done) => {
       resolveModuleOverrides = done;
     });
-    exports = (moduleOverrides: EMCCModuleOverrides) => {
+    exports = (
+      moduleOverrides: EMCCModuleOverrides
+    ): Promise<EMCCModuleOverrides> => {
       if (resolveModuleOverrides) {
         resolveModuleOverrides(moduleOverrides);
         return asyncModuleOverrides;
@@ -99,55 +154,6 @@ if (ENVIRONMENT_IS_WORKER) {
       }
     };
   }
-}
-
-function render(
-  Module: WebAssemblyModule,
-  src: string,
-  options: RenderOptions
-) {
-  for (const { path, data } of options.files) {
-    Module.vizCreateFile(path, data);
-  }
-
-  Module.vizSetY_invert(options.yInvert ? 1 : 0);
-  Module.vizSetNop(options.nop || 0);
-
-  var resultString = Module.vizRenderFromString(
-    src,
-    options.format,
-    options.engine
-  );
-
-  var errorMessageString = Module.vizLastErrorMessage();
-
-  if (errorMessageString !== "") {
-    throw new Error(errorMessageString);
-  }
-
-  return resultString;
-}
-
-export function onmessage(event: MessageEvent) {
-  const { id, src, options } = event.data as RenderRequest;
-
-  return getModule()
-    .then(Module => {
-      const result = render(Module, src, options);
-      postMessage({ id, result });
-    })
-    .catch(e => {
-      const error: SerializedError =
-        e instanceof Error
-          ? {
-              message: e.message,
-              fileName: (e as any).fileName,
-              lineNumber: (e as any).lineNumber,
-            }
-          : { message: e.toString() };
-
-      postMessage({ id, error });
-    });
 }
 
 export default exports;

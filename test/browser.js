@@ -1,14 +1,17 @@
+/* globals getViz, parseSVG */
+/* eslint-env browser, es6 */
+
 const assert = require("assert");
 const puppeteer = require("puppeteer");
 
 const args = puppeteer.defaultArgs();
-args[args.findIndex(flag => /enable-features/.test(flag))] +=
+args[args.findIndex((flag) => /enable-features/.test(flag))] +=
   ",ExperimentalProductivityFeatures,ImportMaps";
 const PUPPETEER_OPTIONS = { args };
 
 const closableMock = { close: Function.prototype };
 
-describe("Test graph rendering using web browser", function() {
+describe("Test graph rendering using web browser", function () {
   /**
    * @type {{close:Promise<void>, port: Promise<number>}}
    */
@@ -30,7 +33,7 @@ describe("Test graph rendering using web browser", function() {
       import("./web-server/bootstrap.mjs").then((module) => {
         server = module.default();
       }),
-      puppeteer.launch(PUPPETEER_OPTIONS).then(b => {
+      puppeteer.launch(PUPPETEER_OPTIONS).then((b) => {
         browser = b;
       }),
     ]);
@@ -38,31 +41,24 @@ describe("Test graph rendering using web browser", function() {
 
   after(() => Promise.all([server.close(), browser.close()]));
 
-  this.beforeEach(async function() {
+  this.beforeEach(async function () {
     page = await browser.newPage();
 
     await page.goto(`http://localhost:${await server.port}/`);
-    await page.evaluate(function() {
+    await page.evaluate(function () {
       window.getViz = () =>
         Promise.all([
-          import("@aduh95/viz.js").then(m => m.default),
-          import("@aduh95/viz.js/worker").then(m => m.default),
+          import("@aduh95/viz.js").then((m) => m.default),
+          import("@aduh95/viz.js/worker").then((m) => m.default),
         ]).then(([Viz, workerURL]) => new Viz({ workerURL }));
-      window.domParser = new DOMParser();
-      window.parseSVG = svg =>
-        window.domParser.parseFromString(svg, "image/svg+xml");
-      window.checkSVG = svg => {
-        try {
-          return window.parseSVG(svg) instanceof SVGDocument;
-        } catch {
-          return false;
-        }
-      };
+      const domParser = new DOMParser();
+      window.parseSVG = (svg) =>
+        domParser.parseFromString(svg, "image/svg+xml");
     });
   });
   this.afterEach(() => page.close());
 
-  it("rendering sample graphs should not throw errors", async function() {
+  it("rendering sample graphs should not throw errors", async function () {
     const graphs = [
       "digraph g {\n  n1 [shape = circle];\n  n2 [shape = egg];\n  n3 [shape = triangle];\n  n4 [shape = diamond];\n  n5 [shape = trapezium];\n}",
       'digraph g {\n    \n  {rank = same; n1; n2; n3; n4; n5}\n  \n  n1 -> n2;\n  n2 -> n3;\n  n3 -> n4;\n  n4 -> n5;\n  \n  subgraph cluster1 {\n    label = "cluster1";\n    color = lightgray;\n    style = filled;\n    \n    n6;\n  }\n  \n  subgraph cluster2 {\n    label = "cluster2";\n    color = red;\n    \n    n7;\n    n8;\n  }\n  \n  n1 -> n6;\n  n2 -> n7;\n  n8 -> n3;\n  n6 -> n7;\n  \n}',
@@ -72,9 +68,9 @@ describe("Test graph rendering using web browser", function() {
     for (const graph of graphs) {
       await assert.doesNotReject(
         page.evaluate(
-          graph =>
+          (graph) =>
             getViz()
-              .then(viz => viz.renderString(graph))
+              .then((viz) => viz.renderString(graph))
               .then(window.check),
           graph
         )
@@ -82,11 +78,12 @@ describe("Test graph rendering using web browser", function() {
     }
   });
 
-  it("result from first graph in input is returned for multiple invocations", async function() {
+  it("result from first graph in input is returned for multiple invocations", async function () {
     const viz = await page.evaluateHandle(() => window.getViz());
 
     const resultAThenB = await page.evaluate(
-      viz => viz.renderString("digraph A {} digraph B {}", { format: "xdot" }),
+      (viz) =>
+        viz.renderString("digraph A {} digraph B {}", { format: "xdot" }),
       viz
     );
     assert.match(
@@ -101,7 +98,8 @@ describe("Test graph rendering using web browser", function() {
     );
 
     const resultBThenA = await page.evaluate(
-      viz => viz.renderString("digraph B {} digraph A {}", { format: "xdot" }),
+      (viz) =>
+        viz.renderString("digraph B {} digraph A {}", { format: "xdot" }),
       viz
     );
     assert.doesNotMatch(
@@ -116,28 +114,28 @@ describe("Test graph rendering using web browser", function() {
     );
   });
 
-  it("syntax error in graph throws exception", async function() {
+  it("syntax error in graph throws exception", async function () {
     await assert.rejects(
       page.evaluate(() =>
-        getViz().then(viz => viz.renderString("digraph { \n ->"))
+        getViz().then((viz) => viz.renderString("digraph { \n ->"))
       ),
       /error in line 2 near \'->\'/
     );
   });
 
-  it("able to recover after throwing exceptions on invalid input", async function() {
+  it("able to recover after throwing exceptions on invalid input", async function () {
     const viz = await page.evaluateHandle(() => window.getViz());
 
     await assert.rejects(
       page.evaluate(
-        viz => viz.renderString('digraph {\n a -> b [label="erroneous]\n}'),
+        (viz) => viz.renderString('digraph {\n a -> b [label="erroneous]\n}'),
         viz
       ),
       /syntax error in line 2/
     );
     await assert.rejects(
       page.evaluate(
-        viz => viz.renderString('digraph {\n a -> \n[label="erroneous]\n}'),
+        (viz) => viz.renderString('digraph {\n a -> \n[label="erroneous]\n}'),
         viz
       ),
       /syntax error in line 3/
@@ -145,71 +143,75 @@ describe("Test graph rendering using web browser", function() {
 
     await assert.doesNotReject(
       page.evaluate(
-        viz => viz.renderString('digraph {\n a -> b [label="correcteous"]\n}'),
+        (viz) =>
+          viz.renderString('digraph {\n a -> b [label="correcteous"]\n}'),
         viz
       )
     );
     await assert.rejects(
-      page.evaluate(viz => viz.renderString("digraph { a -> "), viz),
+      page.evaluate((viz) => viz.renderString("digraph { a -> "), viz),
       /syntax error in line 1/
     );
 
     await assert.doesNotReject(
-      page.evaluate(viz => viz.renderString("digraph { a -> b }"), viz)
+      page.evaluate((viz) => viz.renderString("digraph { a -> b }"), viz)
     );
   });
 
-  it("syntax error following graph throws exception", async function() {
+  it("syntax error following graph throws exception", async function () {
     await assert.rejects(
       page.evaluate(() =>
-        getViz().then(viz => viz.renderString("digraph { \n } ->"))
+        getViz().then((viz) => viz.renderString("digraph { \n } ->"))
       ),
       /error in line 1 near \'->\'/
     );
   });
 
-  it("syntax error message has correct line numbers for multiple invocations", async function() {
+  it("syntax error message has correct line numbers for multiple invocations", async function () {
     const viz = await page.evaluateHandle(() => window.getViz());
 
     await assert.rejects(
-      page.evaluate(viz => viz.renderString("digraph { \n } ->"), viz),
+      page.evaluate((viz) => viz.renderString("digraph { \n } ->"), viz),
       /error in line 1 near \'->\'/
     );
 
     await assert.rejects(
-      page.evaluate(viz => viz.renderString("digraph { \n } ->"), viz),
+      page.evaluate((viz) => viz.renderString("digraph { \n } ->"), viz),
       /error in line 1 near \'->\'/
     );
   });
 
-  it("input with characters outside of basic latin should not throw an error", async function() {
+  it("input with characters outside of basic latin should not throw an error", async function () {
     await Promise.all([
       page
         .evaluate(() =>
-          getViz().then(viz => viz.renderString("digraph { α -> β; }"))
+          getViz().then((viz) => viz.renderString("digraph { α -> β; }"))
         )
-        .then(result => {
+        .then((result) => {
           assert.match(result, /α/, 'Result should contain "α"');
           assert.match(result, /β/, 'Result should contain "β"');
         }),
 
       page
         .evaluate(() =>
-          getViz().then(viz => viz.renderString('digraph { a [label="åäö"]; }'))
+          getViz().then((viz) =>
+            viz.renderString('digraph { a [label="åäö"]; }')
+          )
         )
-        .then(result =>
+        .then((result) =>
           assert.match(result, /åäö/, 'Result should contain "åäö"')
         ),
     ]);
   });
 
-  it("repeated calls to render using setTimeout should not throw an error", async function() {
+  it("repeated calls to render using setTimeout should not throw an error", async function () {
     const memoryStressTest = (done, error) => {
       let i = 0;
       const NB_ITERATIONS = 500;
       const MEMORY_TEST_SRC =
         'digraph G{\n\ttype="digraph";rankdir="TB";use="dot";ranksep="0.3";\n\t949[fontname="Helvetica",color="#000000",shape="box",label="S&#xa;n0",fontcolor="#000000",]\n\t950[fontname="Helvetica",color="#000000",shape="box",label="S&#xa;n1",fontcolor="#000000",]\n\t951[fontname="Helvetica",color="#00cc00",shape="box",label="R&#xa;n2",fontcolor="#00cc00",]\n\t949->944[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="s&#xa;e0",fontcolor="#000000",]\n\t951->944[fontname="Helvetica",color="#00cc00",weight="1",constraint="true",label="ex&#xa;e1",fontcolor="#00cc00",]\n\t949->945[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="pr&#xa;e2",fontcolor="#000000",]\n\t950->946[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="aux&#xa;e3",fontcolor="#000000",]\n\t950->947[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="s&#xa;e4",fontcolor="#000000",]\n\t951->947[fontname="Helvetica",color="#00cc00",weight="1",constraint="true",label="ex&#xa;e5",fontcolor="#00cc00",]\n\t950->948[fontname="Helvetica",color="#000000",weight="10",constraint="true",label="pr&#xa;e6",fontcolor="#000000",]\n\t949->950[fontname="Helvetica",color="#00cc00",weight="1",constraint="true",label="ad&#xa;rel: caus&#xa;e7",fontcolor="#00cc00",]\n\t944->945[style="invis",weight="100",]945->946[style="invis",weight="100",]946->947[style="invis",weight="100",]\n\t947->948[style="invis",weight="100",]\n\tsubgraph wnabyquvkgfmjxes{\n\t\trank="same";\n\t\t944[fontname="Helvetica",label="er&#xa;t0",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t945[fontname="Helvetica",label="stirbt&#xa;t1",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t946[fontname="Helvetica",label="weil&#xa;t2",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t947[fontname="Helvetica",label="er&#xa;t3",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t\t948[fontname="Helvetica",label="lacht&#xa;t4",shape="box",style="bold",color="#000000",fontcolor="#000000",]\n\t}\n\tsubgraph vpmznchgjtuxbrfe{\n\t\t949[]\n\t\t950[]\n\t}\n\tsubgraph ohzxavtqesiunwlk{\n\t\t951[]\n\t}\n}';
       function f() {
+        // eslint-disable-next-line no-undef
         viz
           .renderString(MEMORY_TEST_SRC)
           .then(
@@ -230,15 +232,15 @@ describe("Test graph rendering using web browser", function() {
     );
   });
 
-  it("should accept yInvert option", async function() {
+  it("should accept yInvert option", async function () {
     const viz = await page.evaluateHandle(() => window.getViz());
 
     await page.evaluate(() => {
-      window.parse = output => output.match(/pos=\"[^\"]+\"/g).slice(0, 2);
+      window.parse = (output) => output.match(/pos=\"[^\"]+\"/g).slice(0, 2);
     });
 
     const regular = await page.evaluate(
-      viz =>
+      (viz) =>
         viz
           .renderString("digraph { a -> b; }", { format: "xdot" })
           .then(window.parse),
@@ -251,7 +253,7 @@ describe("Test graph rendering using web browser", function() {
     );
 
     const inverted = await page.evaluate(
-      viz =>
+      (viz) =>
         viz
           .renderString("digraph { a -> b; }", {
             format: "xdot",
@@ -274,7 +276,7 @@ describe("Test graph rendering using web browser", function() {
 
     assert.deepStrictEqual(
       await page.evaluate(
-        viz =>
+        (viz) =>
           viz
             .renderString("digraph { a -> b; }", { format: "xdot" })
             .then(window.parse),
@@ -285,7 +287,7 @@ describe("Test graph rendering using web browser", function() {
     );
   });
 
-  it("should accept nop option and produce different outputs", async function() {
+  it("should accept nop option and produce different outputs", async function () {
     const viz = await page.evaluateHandle(() => window.getViz());
 
     await page.evaluate(() => {
@@ -294,12 +296,17 @@ describe("Test graph rendering using web browser", function() {
     });
 
     const regular = await page.evaluate(
-      viz => viz.renderString(graphSrc, { engine: "neato", format: "svg" }),
+      (viz) =>
+        viz.renderString(window.graphSrc, { engine: "neato", format: "svg" }),
       viz
     );
     const nop1 = await page.evaluate(
-      viz =>
-        viz.renderString(graphSrc, { engine: "neato", format: "svg", nop: 1 }),
+      (viz) =>
+        viz.renderString(window.graphSrc, {
+          engine: "neato",
+          format: "svg",
+          nop: 1,
+        }),
       viz
     );
 
@@ -310,8 +317,12 @@ describe("Test graph rendering using web browser", function() {
     );
 
     const nop2 = await page.evaluate(
-      viz =>
-        viz.renderString(graphSrc, { engine: "neato", format: "svg", nop: 2 }),
+      (viz) =>
+        viz.renderString(window.graphSrc, {
+          engine: "neato",
+          format: "svg",
+          nop: 2,
+        }),
       viz
     );
 
@@ -327,9 +338,9 @@ describe("Test graph rendering using web browser", function() {
     );
   });
 
-  it("should output SVG with correct labels", async function() {
+  it("should output SVG with correct labels", async function () {
     const [node1Text, node2Text] = await page.evaluate(() =>
-      window.getViz().then(viz =>
+      window.getViz().then((viz) =>
         viz
           .renderString("digraph { a -> b; }")
           .then(window.parseSVG)
@@ -344,9 +355,9 @@ describe("Test graph rendering using web browser", function() {
     assert.strictEqual(node2Text, "b");
   });
 
-  it('can reference images by name if dimensions are specified using the "images" option', async function() {
+  it('can reference images by name if dimensions are specified using the "images" option', async function () {
     const [name, width, height] = await page.evaluate(() =>
-      window.getViz().then(viz =>
+      window.getViz().then((viz) =>
         viz
           .renderString('digraph { a[image="test.png"]; }', {
             images: [{ path: "test.png", width: 400, height: 300 }],
@@ -367,9 +378,9 @@ describe("Test graph rendering using web browser", function() {
     assert.strictEqual(height, "300px");
   });
 
-  it("can reference images with a protocol and hostname", async function() {
+  it("can reference images with a protocol and hostname", async function () {
     const result = await page.evaluate(() =>
-      window.getViz().then(viz =>
+      window.getViz().then((viz) =>
         viz
           .renderString(
             'digraph { a[id="a",image="http://example.com/xyz/test.png"]; b[id="b",image="http://example.com/xyz/test2.png"]; }',
@@ -416,15 +427,15 @@ describe("Test graph rendering using web browser", function() {
     ]);
   });
 
-  it("can render JSON objects", async function() {
+  it("can render JSON objects", async function () {
     const result = await page.evaluate(() =>
-      window.getViz().then(viz => viz.renderJSONObject("digraph { 1 -> 2 }"))
+      window.getViz().then((viz) => viz.renderJSONObject("digraph { 1 -> 2 }"))
     );
 
     const keys = Object.keys(result);
 
     assert(
-      ["name", "directed", "strict", "_subgraph_cnt"].every(key =>
+      ["name", "directed", "strict", "_subgraph_cnt"].every((key) =>
         keys.includes(key)
       ),
       "renderJSONObject should contain required keys"
