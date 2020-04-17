@@ -6,11 +6,11 @@ const workerURL = "./deno-files/worker.js";
 
 Deno.test({
   name: "Test graph rendering using Deno",
-  fn(): Promise<any> {
-    return getViz()
-      .then((viz) => viz.renderString("digraph { a -> b; }"))
-      .then((svg) => assertStrContains(svg, "</svg>"))
-      .catch(unreachable);
+  async fn(): Promise<any> {
+    const viz = await getViz();
+    const svg = await viz.renderString("digraph { a -> b; }");
+    assertStrContains(svg, "</svg>");
+    viz.terminateWorker();
   },
 });
 
@@ -32,7 +32,8 @@ Deno.test({
         return viz.renderString(dot + "}");
       })
       .then((svg: string) => assertStrContains(svg, "</svg>"))
-      .catch(unreachable);
+      .catch(unreachable)
+      .finally(() => viz.terminateWorker());
   },
 });
 

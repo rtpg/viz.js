@@ -14,14 +14,14 @@ class WorkerWrapper {
     this._isNodeWorker = "function" === typeof (worker as NodeJSWorker).ref;
 
     if (this._isNodeWorker) {
-      (this._worker as NodeJSWorker).on("message", data =>
+      (this._worker as NodeJSWorker).on("message", (data) =>
         this._eventListener({ data } as MessageEvent)
       );
-      (this._worker as NodeJSWorker).on("error", e =>
-        this._listeners.forEach(listener => listener(e))
+      (this._worker as NodeJSWorker).on("error", (e) =>
+        this._listeners.forEach((listener) => listener(e))
       );
     } else {
-      (this._worker as Worker).addEventListener("message", event =>
+      (this._worker as Worker).addEventListener("message", (event) =>
         this._eventListener(event)
       );
     }
@@ -46,7 +46,7 @@ class WorkerWrapper {
         (this._worker as NodeJSWorker).ref();
       }
 
-      this._listeners[id] = function(error, result) {
+      this._listeners[id] = function (error, result) {
         if (error) {
           const e = new Error(error.message);
           if (error.fileName) (e as any).fileName = error.fileName;
@@ -58,6 +58,10 @@ class WorkerWrapper {
 
       this._worker.postMessage({ id, src, options });
     });
+  }
+
+  terminate() {
+    return this._worker.terminate();
   }
 }
 
@@ -181,6 +185,13 @@ class Viz {
     }
 
     return this.renderString(src, { ...options, format }).then(JSON.parse);
+  }
+
+  /**
+   * Terminates the worker, clearing all on-going work.
+   */
+  terminateWorker() {
+    return this._wrapper.terminate();
   }
 }
 
