@@ -55,6 +55,6 @@
     "puppeteer": "^3.0.0",
     "rollup": "^2.4.0",
     "terser": "^4.6.3",
-    "typescript": "^3.8.0-beta"
+    "typescript": "^3.9.0-beta"
   }
 }

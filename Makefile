@@ -21,7 +21,7 @@ CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
 YARN_PATH = $(shell $(NODE) -p 'path.resolve($(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))')
-YARN_DIR = $(shell dirname $(YARN_PATH))
+YARN_DIR = $(dir $(YARN_PATH))
 YARN ?= $(NODE) $(YARN_PATH)
 
 TSC ?= $(YARN) tsc
@@ -60,9 +60,7 @@ all: \
 
 
 .PHONY: test
-test: all lint
-	$(MOCHA) $@
-	$(MAKE) deno-test
+test: lint deno-test node-test ts-integration-test
 
 .PHONY: lint
 lint: lint-ts lint-test
@@ -74,6 +72,20 @@ lint-ts:
 .PHONY: lint-test
 lint-test:
 	$(ESLINT) test
+
+.PHONY: node-test
+node-test: all
+	$(MOCHA) test
+
+.PHONY: ts-integration-test
+ts-integration-test: pack
+	$(eval TMP := $(shell mktemp -d))
+	mkdir -p $(TMP)/$@
+	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
+	touch $(TMP)/$@/package.json
+	cd $(TMP)/$@ && $(YARN) add $(abspath sources/viz.js-v$(VIZ_VERSION).tar.gz)
+	cp test/integration.ts $(TMP)/$@/
+	$(TSC) --noEmit $(TMP)/$@/integration.ts
 
 .PHONY: deno-test
 ifdef DENO
