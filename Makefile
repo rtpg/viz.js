@@ -20,7 +20,7 @@ CC = $(EMCC)
 CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-YARN_PATH = $(shell $(NODE) -p 'path.resolve($(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))')
+YARN_PATH = $(abspath $(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))
 YARN_DIR = $(dir $(YARN_PATH))
 YARN ?= $(NODE) $(YARN_PATH)
 
@@ -103,10 +103,23 @@ pack: all
 
 .PHONY: publish
 publish:
-	npm version $(VIZ_VERSION)
+	@git diff --exit-code --quiet . || (\
+		echo "Working directory contains unstaged changes:" && \
+		git status --untracked-files=no --porcelain && \
+		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
+		exit 1 \
+	)
+	@[ "$(VIZ_VERSION)" != "$(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)" ] || (\
+		echo "\033[1;31mYou must specify a new version: \033[1;32mVIZ_VERSION=<newversion> make $@\033[0m" && \
+		exit 1 \
+	)
+	$(NODE) -e 'fs.writeFileSync("./package.json",JSON.stringify(require("./package.json"),(k,v)=>k==="version"?"$(VIZ_VERSION)":v,2)+"\n")'
+	git diff package.json
 	$(MAKE) clean
-	$(MAKE) test -j4 || (git reset HEAD^ --hard && git tag -d v$(VIZ_VERSION) && exit 1)
-	$(MAKE) pack
+	$(MAKE) test -j4
+	git add package.json
+	git commit -m "v$(VIZ_VERSION)"
+	git tag "v$(VIZ_VERSION)"
 	$(YARN) npm publish --access public
 	git push && git push --tags
 
