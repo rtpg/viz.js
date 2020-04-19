@@ -1,5 +1,10 @@
 import type { Worker as NodeJSWorker } from "worker_threads";
-import type { RenderRequestListener, RenderResponse } from "./types";
+import type {
+  RenderRequestListener,
+  RenderResponse,
+  RenderOptions,
+  GraphvizJSONOutput,
+} from "./types";
 
 class WorkerWrapper {
   private _worker: Worker | NodeJSWorker;
@@ -70,41 +75,6 @@ type VizConstructorOptionsWorker = { worker: Worker | NodeJSWorker };
 export type VizConstructorOptions =
   | VizConstructorOptionsWorkerURL
   | VizConstructorOptionsWorker;
-
-type Image = {
-  path: string;
-  height: string | number;
-  width: string | number;
-};
-type File = {
-  path: string;
-  data: string;
-};
-export type RenderOptions = {
-  engine?: "circo" | "dot" | "fdp" | "neato" | "osage" | "twopi";
-  format?:
-    | "svg"
-    | "dot"
-    | "xdot"
-    | "plain"
-    | "plain-ext"
-    | "ps"
-    | "ps2"
-    | "json"
-    | "json0";
-  yInvert?: boolean;
-  images?: Image[];
-  files?: File[];
-  nop: number;
-};
-export type GraphvizJSONOutput = {
-  name: string;
-  directed: boolean;
-  strict: boolean;
-  _subgraph_cnt: number;
-  objects?: GraphvizJSONOutput[];
-  [key: string]: any;
-};
 
 class Viz {
   private _wrapper: WorkerWrapper;
@@ -196,3 +166,5 @@ class Viz {
 }
 
 export default Viz;
+
+export { RenderOptions, GraphvizJSONOutput };

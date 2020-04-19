@@ -45,7 +45,7 @@ export type RenderOptions = {
   yInvert?: boolean;
   images?: Image[];
   files?: File[];
-  nop: number;
+  nop?: number;
 };
 
 export type GraphvizJSONOutput = {

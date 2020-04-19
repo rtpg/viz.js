@@ -53,7 +53,7 @@ ROLLUP ?= $(YARN) rollup
 .PHONY: all
 all: \
 		dist \
-			dist/index.cjs dist/index.mjs dist/index.d.ts \
+			dist/index.cjs dist/index.mjs dist/index.d.ts dist/types.d.ts \
 			dist/render.node.mjs dist/render.browser.js dist/render.wasm \
 	 	wasm \
 		worker \
@@ -83,7 +83,8 @@ ts-integration-test: pack
 	mkdir -p $(TMP)/$@
 	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
 	touch $(TMP)/$@/package.json
-	cd $(TMP)/$@ && $(YARN) add $(abspath sources/viz.js-v$(VIZ_VERSION).tar.gz)
+	cp sources/viz.js-v$(VIZ_VERSION).tar.gz $(TMP)
+	cd $(TMP)/$@ && $(YARN) add $(TMP)/viz.js-v$(VIZ_VERSION).tar.gz
 	cp test/integration.ts $(TMP)/$@/
 	$(TSC) --noEmit $(TMP)/$@/integration.ts
 
@@ -142,6 +143,9 @@ build/index.js: src/index.ts | build
 
 dist/index.d.ts: src/index.ts
 	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
+
+dist/types.d.ts: src/types.d.ts | dist
+	cp $< $@
 
 test/deno-files/index.d.ts: dist/index.d.ts
 	sed '\,^///, d;/^import type/ d' $< > $@
