@@ -102,6 +102,7 @@ pack: all
 	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
 
 .PHONY: publish
+publish: CURRENT_VIZ_VERSION=$(shell $(NODE) -p "require('./package.json').version")
 publish:
 	@git diff --exit-code --quiet . || (\
 		echo "Working directory contains unstaged changes:" && \
@@ -109,7 +110,11 @@ publish:
 		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
 		exit 1 \
 	)
-	@[ "$(VIZ_VERSION)" != "$(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)" ] || (\
+	@(! git diff --exit-code v$(CURRENT_VIZ_VERSION) CHANGELOG.md) || (\
+		echo "No changes to CHANGELOG since previous release. Aborting." && \
+		exit 1 \
+	)
+	@[ "$(VIZ_VERSION)" != "$(CURRENT_VIZ_VERSION)-$(shell git rev-parse HEAD)" ] || (\
 		echo "\033[1;31mYou must specify a new version: \033[1;32mVIZ_VERSION=<newversion> make $@\033[0m" && \
 		exit 1 \
 	)
