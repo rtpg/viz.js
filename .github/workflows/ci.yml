@@ -25,6 +25,11 @@ jobs:
         run:
           sudo apt install -y automake build-essential git libgbm1 pkg-config
           python python-pip unzip
+      - name: Read emsdk version from Makefile
+        run:
+          echo "##[set-output name=EMSCRIPTEN_VERSION;]$(awk '{if($1
+          =="EMSCRIPTEN_VERSION")print $3}' Makefile)"
+        id: emsdk
       - name: Cache emsdk
         uses: actions/cache@v1
         id: cache # This is important!
@@ -32,11 +37,12 @@ jobs:
           # Set to the same folder as actions-cache-folder (more below)
           path: "emsdk-cache"
           # Set the end bit to emsdk version
-          key: ${{ runner.os }}-emsdk-1.39.12
+          key:
+            ${{ runner.os }}-emsdk-${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
       - name: Setup emsdk (use cache if found, create otherwise)
         uses: mymindstorm/setup-emsdk@v2
         with:
-          version: 1.39.12
+          version: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: "emsdk-cache"
           # This stops it from using tc.cacheDir since we are using
           #  actions/cache.
