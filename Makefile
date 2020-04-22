@@ -60,7 +60,7 @@ all: \
 
 
 .PHONY: test
-test: lint deno-test node-test ts-integration-test
+test: lint test-deno test-node ts-test-integration
 
 .PHONY: lint
 lint: lint-ts lint-test
@@ -73,12 +73,12 @@ lint-ts:
 lint-test:
 	$(ESLINT) test
 
-.PHONY: node-test
-node-test: all
+.PHONY: test-node
+test-node: all
 	$(MOCHA) test
 
-.PHONY: ts-integration-test
-ts-integration-test: pack
+.PHONY: ts-test-integration
+ts-test-integration: pack
 	$(eval TMP := $(shell mktemp -d))
 	mkdir -p $(TMP)/$@
 	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
@@ -88,12 +88,12 @@ ts-integration-test: pack
 	cp test/integration.ts $(TMP)/$@/
 	$(TSC) --noEmit $(TMP)/$@/integration.ts
 
-.PHONY: deno-test
+.PHONY: test-deno
 ifdef DENO
-deno-test: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
-	$(DENO) --importmap test/deno-files/importmap.json test/deno.ts
+test-deno: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
+	$(DENO) --importmap test/deno-files/importmap.json -r test/deno.ts
 else
-deno-test:
+test-deno:
 	@echo "Deno tests are disabled by environment."
 endif
 
@@ -166,7 +166,7 @@ dist/types.d.ts: src/types.d.ts | dist
 	cp $< $@
 
 test/deno-files/index.d.ts: dist/index.d.ts
-	sed '\,^///, d;/^import type/ d' $< > $@
+	sed '\,^///, d;/as NodeJSWorker/ d;s#"./types";#"../../dist/types.d.ts";#' $< > $@
 	echo "declare type NodeJSWorker=never;" >> $@
 
 dist/index.mjs: build/index.js
