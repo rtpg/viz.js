@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [13.x]
+        node: [14.x]
         deno: [v0.41.0]
 
     steps:
@@ -23,8 +23,8 @@ jobs:
       - run: sudo apt update
       - name: Install utilities
         run:
-          sudo apt install -y automake build-essential git pkg-config python
-          python-pip unzip
+          sudo apt install -y automake build-essential git libgbm1 pkg-config
+          python python-pip unzip
       - name: Cache emsdk
         uses: actions/cache@v1
         id: cache # This is important!
