@@ -51,16 +51,7 @@ MOCHA ?= $(YARN) mocha
 ROLLUP ?= $(YARN) rollup
 
 .PHONY: all
-all: \
-		dist \
-			dist/index.cjs dist/index.mjs dist/index.d.ts dist/types.d.ts \
-			dist/render.node.mjs dist/render.browser.js dist/render.wasm \
-			dist/renderSync.js \
-	 	sync \
-		 	sync/index.js sync/index.d.ts \
-	 	wasm \
-		worker \
-
+all: $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
 
 .PHONY: test
 test: lint test-deno test-node ts-test-integration
@@ -172,7 +163,7 @@ build/worker.js: src/worker.ts | build
 build/index.js: src/index.ts | build
 	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
-dist/index.d.ts: src/index.ts
+dist/index.d.ts: src/index.ts | dist
 	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
 
 dist/types.d.ts: src/types.d.ts | dist
@@ -182,10 +173,10 @@ test/deno-files/index.d.ts: dist/index.d.ts
 	sed '\,^///, d;/as NodeJSWorker/ d;s#"./types";#"../../dist/types.d.ts";#' $< > $@
 	echo "declare type NodeJSWorker=never;" >> $@
 
-dist/index.mjs: build/index.js
+dist/index.mjs: build/index.js | dist
 	$(TERSER) --toplevel $^ > $@
 
-dist/index.cjs: src/index.cjs
+dist/index.cjs: src/index.cjs | dist
 	$(TERSER) --toplevel $^ > $@
 
 build/render: build/render.js
@@ -208,19 +199,19 @@ build/render.rollup.js: build/worker.js build/render
 build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
 	cat $^ > $@
 
-dist/render.node.mjs: build/render.node.mjs
+dist/render.node.mjs: build/render.node.mjs | dist
 	$(TERSER) --toplevel \
 		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_WEB=false \
 		-d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
 		$^ > $@
 
-dist/render.browser.js: build/render.rollup.js
+dist/render.browser.js: build/render.rollup.js | dist
 	$(TERSER) --toplevel \
 		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_WEB=false \
 		-d ENVIRONMENT_IS_WORKER=true -d ENVIRONMENT_IS_NODE=false \
 		$^ > $@
 
-dist/render.js: build/render.js build/worker.js
+dist/render.js: build/render.js build/worker.js | dist
 	$(TERSER) $^ > $@
 
 build/render.wasm: build/render.js
@@ -228,7 +219,7 @@ build/render.wasm: build/render.js
 		rm $^ && $(MAKE) $@; \
 	fi
 
-dist/render.wasm: build/render.wasm
+dist/render.wasm: build/render.wasm | dist
 	cp $< $@
 
 build/render.js: src/viz.cpp | build
@@ -242,7 +233,7 @@ build/asm.mjs: src/viz.cpp | build
 build/renderSync.js: src/renderSync.ts | build
 	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
-dist/renderSync.js: build/renderSync.js build/asm.mjs build/renderFunction.js
+dist/renderSync.js: build/renderSync.js build/asm.mjs build/renderFunction.js | dist
 	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
 
 test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
