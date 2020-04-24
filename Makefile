@@ -54,7 +54,7 @@ ROLLUP ?= $(YARN) rollup
 all: $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
 
 .PHONY: test
-test: lint test-deno test-node ts-test-integration
+test: lint test-deno test-node test-ts-integration
 
 .PHONY: lint
 lint: lint-ts lint-test
@@ -71,8 +71,8 @@ lint-test:
 test-node: all
 	$(MOCHA) test
 
-.PHONY: ts-test-integration
-ts-test-integration: pack
+.PHONY: test-ts-integration
+test-ts-integration: pack
 	$(eval TMP := $(shell mktemp -d))
 	mkdir -p $(TMP)/$@
 	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
