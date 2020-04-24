@@ -34,4 +34,21 @@ describe("Test graph rendering using Node.js", function () {
       .then((result) => assert.ok(result))
       .finally(() => viz.terminateWorker());
   });
+
+  it("should render a graph using sync version", function () {
+    const renderStringSync = require("@aduh95/viz.js/sync");
+
+    assert.ok(renderStringSync("digraph { a -> b; }"));
+  });
+
+  it("should render same graph using async and sync versions", async function () {
+    const viz = await getViz();
+    const renderStringSync = require("@aduh95/viz.js/sync");
+
+    const resultSync = renderStringSync("digraph { a -> b; }");
+    return viz
+      .renderString("digraph { a -> b; }")
+      .then((result) => assert.strictEqual(result, resultSync))
+      .finally(() => viz.terminateWorker());
+  });
 });

@@ -52,6 +52,29 @@ async function dot2svg(dot, options = {}) {
 }
 ```
 
+#### Synchronous API
+
+There is a synchronous version of `renderString` method available:
+
+```js
+const vizRenderStringSync = require("@aduh95/viz.js/sync");
+
+console.log(vizRenderStringSync("digraph{1 -> 2 }"));
+```
+
+Key differences with async API:
+
+- It compiles Graphviz to JavaScript instead of `WebAssembly`, this should come
+  with a performance hit and a bigger bundled file size (brotli size is 27%
+  bigger).
+- It is a CommonJS module, while the rest of the API is written as standard
+  ECMAScript modules. The upside is this syntax is supported on a wider Node.js
+  version array.
+
+> Note: Using the sync API on the browser main thread is not recommended, it
+> might degrade the overall user experience of the web page. It is strongly
+> recommended to use web workers – with the sync or the async API.
+
 ### Browsers
 
 You can either use the `worker` or the `workerURL` on the constructor. Note that
