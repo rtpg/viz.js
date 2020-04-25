@@ -9,7 +9,7 @@ EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.0
 EMSCRIPTEN_VERSION = 1.39.13
 
-EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
+EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.gz"
 GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
@@ -21,7 +21,6 @@ CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
 YARN_PATH = $(abspath $(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))
-YARN_DIR = $(dir $(YARN_PATH))
 YARN ?= $(NODE) $(YARN_PATH)
 
 TSC ?= $(YARN) tsc
@@ -148,23 +147,15 @@ sync/index.js: | sync
 	echo "module.exports=require('../dist/renderSync.js')" > $@
 sync/index.d.ts: dist/renderSync.d.ts | sync
 	echo 'export {default} from "../dist/renderSync"' > $@
-dist/renderSync.d.ts: src/renderSync.ts | dist
-	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $<
 
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build/renderFunction.js: src/renderFunction.ts | build
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
+build/renderFunction.js build/worker.js build/index.js build/renderSync.js: build/%.js: src/%.ts | build
+	$(TSC) $(TS_FLAGS) --outDir $(dir $@) -m es6 --target esnext $<
 
-build/worker.js: src/worker.ts | build
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
-
-build/index.js: src/index.ts | build
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
-
-dist/index.d.ts: src/index.ts | dist
-	$(TSC) $(TS_FLAGS) --outDir $(DIST_FOLDER) -d --emitDeclarationOnly $^
+dist/index.d.ts dist/renderSync.d.ts: dist/%.d.ts: src/%.ts | dist
+	$(TSC) $(TS_FLAGS) --outDir $(dir $@) -d --emitDeclarationOnly $^
 
 dist/types.d.ts: src/types.d.ts | dist
 	cp $< $@
@@ -193,45 +184,36 @@ build/render: build/render.js
 			Module.onRuntimeInitialized = ()=>done(Module);\
 	})}" >> $@
 
-build/render.rollup.js: build/worker.js build/render 
+build/render.browser.js: build/worker.js build/render 
 	$(ROLLUP) -f esm $< > $@
 
-build/render.node.mjs: src/nodejs-module-interop.mjs build/render.rollup.js
+build/render.node.mjs: src/nodejs-module-interop.mjs build/render.browser.js
 	cat $^ > $@
 
-dist/render.node.mjs: build/render.node.mjs | dist
-	$(TERSER) --toplevel \
-		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_WEB=false \
-		-d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
-		$^ > $@
-
-dist/render.browser.js: build/render.rollup.js | dist
-	$(TERSER) --toplevel \
+dist/render.browser.js: DEFINES=\
 		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_WEB=false \
 		-d ENVIRONMENT_IS_WORKER=true -d ENVIRONMENT_IS_NODE=false \
-		$^ > $@
+
+dist/render.node.mjs: DEFINES=\
+		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_WEB=false \
+		-d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
+
+dist/render.browser.js dist/render.node.mjs: dist/%: build/% | dist
+	$(TERSER) --toplevel $(DEFINES) $<> $@
 
 dist/render.js: build/render.js build/worker.js | dist
 	$(TERSER) $^ > $@
 
 build/render.wasm: build/render.js
-	@if ! ([ -f '$@' ]);then \
-		rm $^ && $(MAKE) $@; \
-	fi
+	[ -f '$@' ] || (rm $^ && $(MAKE) $@)
 
 dist/render.wasm: build/render.wasm | dist
 	cp $< $@
 
-build/render.js: src/viz.cpp | build
+build/asm.mjs: CC_FLAGS:=$(CC_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0
+build/render.js build/asm.mjs: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
-
-build/asm.mjs: src/viz.cpp | build
-	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
-	$(CC) $(CC_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0 -Oz -o $@ $< $(CC_INCLUDES)
-
-build/renderSync.js: src/renderSync.ts | build
-	$(TSC) $(TS_FLAGS) --outDir build -m es6 --target esnext $<
 
 dist/renderSync.js: build/renderSync.js build/asm.mjs build/renderFunction.js | dist
 	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
@@ -241,7 +223,7 @@ test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
 	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
 
-$(PREFIX_FULL) build dist sources sync $(YARN_DIR):
+$(PREFIX_FULL) build dist sync:
 	mkdir -p $@
 
 .PHONY: expat–full
@@ -267,19 +249,13 @@ graphviz-full: build-full/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	cd $</plugin && $(EMMAKE) $(MAKE) --quiet install
 
 
-build-full/expat-$(EXPAT_VERSION): sources/expat-$(EXPAT_VERSION).tar.bz2
-	mkdir -p $@
-	tar -jxf $< --strip-components 1 -C $@
-
-build-full/graphviz-$(GRAPHVIZ_VERSION): sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz
+build-full/expat-$(EXPAT_VERSION) build-full/graphviz-$(GRAPHVIZ_VERSION): build-full/%: sources/%.tar.gz
 	mkdir -p $@
 	tar -zxf $< --strip-components 1 -C $@
 
-sources/expat-$(EXPAT_VERSION).tar.bz2: | sources
-	curl --fail --location $(EXPAT_SOURCE_URL) -o $@
+$(YARN_PATH): SOURCE=$(YARN_SOURCE_URL)
+sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz: SOURCE=$(GRAPHVIZ_SOURCE_URL)
+sources/expat-$(EXPAT_VERSION).tar.gz: SOURCE=$(EXPAT_SOURCE_URL)
+sources/expat-$(EXPAT_VERSION).tar.gz sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz $(YARN_PATH):
+	curl --fail --create-dirs --location $(SOURCE) -o $@
 
-sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz: | sources
-	curl --fail --location $(GRAPHVIZ_SOURCE_URL) -o $@
-
-$(YARN_PATH): | $(YARN_DIR)
-	curl --fail --location $(YARN_SOURCE_URL) -o $@
