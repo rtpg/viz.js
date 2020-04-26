@@ -103,12 +103,16 @@ publish:
 		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
 		exit 1 \
 	)
+ifndef SKIP_CHANGELOG_VERIF
 	@(! git diff --exit-code v$(CURRENT_VIZ_VERSION) CHANGELOG.md) || (\
 		echo "No changes to CHANGELOG since previous release. Aborting." && \
+		echo "\033[3mHint: use \033[0mSKIP_CHANGELOG_VERIF=true make $@\033[3m to publish anyway.\033[0m" >&2 && \
 		exit 1 \
 	)
+endif
 	@[ "$(VIZ_VERSION)" != "$(CURRENT_VIZ_VERSION)-$(shell git rev-parse HEAD)" ] || (\
-		echo "\033[1;31mYou must specify a new version: \033[1;32mVIZ_VERSION=<newversion> make $@\033[0m" && \
+		echo "You must specify a new version. Aborting." && \
+		echo "\033[3mHint: use \033[0mVIZ_VERSION=<newversion> make $@\033[3m to specify the new version number.\033[0m" >&2 && \
 		exit 1 \
 	)
 	$(NODE) -e 'fs.writeFileSync("./package.json",JSON.stringify(require("./package.json"),(k,v)=>k==="version"?"$(VIZ_VERSION)":v,2)+"\n")'
@@ -134,7 +138,7 @@ deps: expat-full graphviz-full $(YARN_PATH)
 .PHONY: clean
 .NOTPARALLEL: clean
 clean:
-	@echo "\033[1;33mHint: use \033[1;32mmake clobber\033[1;33m to start from a clean slate\033[0m" >&2
+	@echo "\033[3mHint: use \033[0mmake clobber\033[3m to start from a clean slate.\033[0m" >&2
 	rm -rf build dist sync
 	rm -f wasm worker
 	rm -f test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
