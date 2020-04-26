@@ -58,15 +58,15 @@ jobs:
           curl -fsSL https://deno.land/x/install/install.sh | sudo
           DENO_INSTALL=/usr/local sh -s ${{ matrix.deno }}
       - name: Download and build dependencies
-        run: make deps
+        run: make deps -j
         env:
           CI: true
       - name: Build and pack Viz.js
-        run: make pack -j4
+        run: make pack -j
         env:
           VIZ_VERSION: unreleased-${{ github.sha }}
       - name: Run tests
-        run: make test -j4
+        run: make test -j
       - name: Upload artifact if tests are green
         if: success()
         uses: actions/upload-artifact@v1

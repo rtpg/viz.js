@@ -114,7 +114,7 @@ publish:
 	$(NODE) -e 'fs.writeFileSync("./package.json",JSON.stringify(require("./package.json"),(k,v)=>k==="version"?"$(VIZ_VERSION)":v,2)+"\n")'
 	git diff package.json
 	$(MAKE) clean
-	$(MAKE) test -j4
+	$(MAKE) test
 	git add package.json
 	git commit -m "v$(VIZ_VERSION)"
 	git tag "v$(VIZ_VERSION)"
