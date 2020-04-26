@@ -237,8 +237,6 @@ graphviz-full: build-full/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
 	cd $< && ./configure --quiet
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
-	mkdir -p $</FEATURE
-	cp hacks/FEATURE/sfio hacks/FEATURE/vmalloc $</FEATURE
 	[ `uname` != 'Darwin' ] || [ -f $</configure.ac.old ] || (\
 		cp $</configure.ac $</configure.ac.old && \
 		sed '/-headerpad_max_install_names/d' $</configure.ac.old > $</configure.ac \
