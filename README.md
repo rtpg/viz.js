@@ -1,6 +1,9 @@
 # Viz.js
 
 [![CI](https://github.com/aduh95/viz.js/workflows/CI/badge.svg)](https://github.com/aduh95/viz.js/actions)
+[![NPM version](https://img.shields.io/npm/v/@aduh95/viz.js.svg)](https://www.npmjs.org/package/@aduh95/viz.js)
+[![Node >=13.2](https://img.shields.io/node/v/@aduh95/viz.js.svg)](https://nodejs.org)
+[![License MIT](https://img.shields.io/npm/l/@aduh95/viz.js.svg)](https://github.com/aduh95/viz.js/blob/master/LICENCE)
 
 This project builds [Graphviz](http://www.graphviz.org) with
 [Emscripten](http://kripken.github.io/emscripten-site/) and provides a simple
@@ -11,6 +14,14 @@ wrapper for using it in the browser.
 Have a look at [Dagre](https://dagrejs.github.io/), which is not a hack.
 
 ## Usage
+
+### Getting Viz.js
+
+- Install the
+  [`@aduh95/viz.js` package](https://www.npmjs.com/package/@aduh95/viz.js) from
+  the npm registry.
+- Download from the
+  [GH Actions CI](https://github.com/aduh95/viz.js/actions?query=is%3Asuccess).
 
 ### Node.js
 
@@ -77,6 +88,8 @@ Key differences with async API:
 
 ### Browsers
 
+#### Using a bundler
+
 You can either use the `worker` or the `workerURL` on the constructor. Note that
 when using `workerURL`, `Viz` constructor will try to spawn a webworker using
 `type=module`. If you don't want a module worker, you should provide a `worker`
@@ -124,14 +137,16 @@ async function dot2svg(dot, options) {
 }
 ```
 
+#### Using a CDN
+
 If you are using a CDN and don't want a separate file for the worker module,
 there is a workaround:
 
 ```js
-import Viz from "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6";
+import Viz from "https://unpkg.com/@aduh95/viz.js";
 
 const locateFile = (fileName) =>
-  "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist/" + fileName;
+  "https://unpkg.com/@aduh95/viz.js/dist/" + fileName;
 const onmessage = async function (event) {
   if (this.messageHandler === undefined) {
     // Lazy loading actual handler
@@ -178,7 +193,7 @@ or want a custom message handling, you can use dynamic imports to help you:
  */
 function getVizMessageHandler() {
   if (this._messageHandler === undefined) {
-    const vizDistFolder = "https://unpkg.com/@aduh95/viz.js@3.0.0-beta.6/dist";
+    const vizDistFolder = "https://unpkg.com/@aduh95/viz.js/dist";
     const Module = {
       // locateFile is used by render module to locate WASM file.
       locateFile: (fileName) => `${vizDistFolder}/${fileName}`,
