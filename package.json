@@ -20,7 +20,7 @@
   },
   "type": "commonjs",
   "engines": {
-    "node": ">=12.8.0"
+    "node": "^12.17.0 || >=13.2.0"
   },
   "repository": {
     "type": "git",
