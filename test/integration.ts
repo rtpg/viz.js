@@ -4,6 +4,7 @@
  */
 
 import Viz from "@aduh95/viz.js";
+import vizRenderStringAsync from "@aduh95/viz.js/async";
 import vizRenderStringSync from "@aduh95/viz.js/sync";
 
 // @ts-expect-error
@@ -51,6 +52,20 @@ viz.terminateWorker();
 
 // @ts-expect-error
 viz.terminateWorker("argument");
+
+// @ts-expect-error
+vizRenderStringAsync();
+
+vizRenderStringAsync("string");
+vizRenderStringAsync("string").then(() => {});
+// @ts-expect-error
+vizRenderStringAsync("string").replace("string", "");
+vizRenderStringAsync("string", {});
+vizRenderStringAsync("string", { format: "dot" });
+// @ts-expect-error
+vizRenderStringAsync("string", { format: "unknown" });
+// @ts-expect-error
+vizRenderStringAsync("string", { unknown: "unknown" });
 
 // @ts-expect-error
 vizRenderStringSync();

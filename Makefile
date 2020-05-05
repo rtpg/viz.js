@@ -139,7 +139,7 @@ deps: expat-full graphviz-full $(YARN_PATH)
 .NOTPARALLEL: clean
 clean:
 	@echo "\033[3mHint: use \033[0mmake clobber\033[3m to start from a clean slate.\033[0m" >&2
-	$(RM) -r build dist sync
+	$(RM) -r async build dist sync
 	$(RM) wasm worker
 	$(RM) test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
 
@@ -147,19 +147,19 @@ clean:
 clobber: | clean
 	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
 
-sync/index.js: | sync
-	echo "module.exports=require('../dist/renderSync.js')" > $@
-sync/index.d.ts: dist/renderSync.d.ts | sync
-	echo 'export {default} from "../dist/renderSync"' > $@
+async/index.js sync/index.js: %/index.js: | %
+	echo "module.exports=require('../dist/render_$(@D)).js')" > $@
+async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
+	echo "export {default} from '../dist/render_$(@D)'" > $@
 
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build/renderFunction.js build/worker.js build/index.js build/renderSync.js: build/%.js: src/%.ts | build
-	$(TSC) $(TS_FLAGS) --outDir $(dir $@) -m es6 --target esnext $<
+build/viz_wrapper.js build/worker.js build/index.js build/render_async.js build/render_sync.js: build/%.js: src/%.ts | build
+	$(TSC) $(TS_FLAGS) --outDir $(@D) -m es2020 --target esnext $<
 
-dist/index.d.ts dist/renderSync.d.ts: dist/%.d.ts: src/%.ts | dist
-	$(TSC) $(TS_FLAGS) --outDir $(dir $@) -d --emitDeclarationOnly $^
+dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts: dist/%.d.ts: src/%.ts | dist
+	$(TSC) $(TS_FLAGS) --outDir $(@D) -d --emitDeclarationOnly $^
 
 dist/types.d.ts: src/types.d.ts | dist
 	cp $< $@
@@ -219,7 +219,9 @@ build/render.js build/asm.mjs: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
-dist/renderSync.js: build/renderSync.js build/asm.mjs build/renderFunction.js | dist
+dist/render_async.js: build/render_async.js | dist
+	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
+dist/render_sync.js: build/render_sync.js build/asm.mjs build/viz_wrapper.js | dist
 	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
 
 test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
@@ -227,7 +229,7 @@ test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
 	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
 
-$(PREFIX_FULL) build dist sync:
+async build dist $(PREFIX_FULL) sync:
 	mkdir -p $@
 
 .PHONY: expat–full

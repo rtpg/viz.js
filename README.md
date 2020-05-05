@@ -46,22 +46,23 @@ viz
   });
 ```
 
-If you want to use it from a CommonJS script, you would need to use a dynamic
-imports:
+If you want to use it from a CommonJS script, you can use the
+`@aduh95/viz.js/async` wrapper shortcut:
 
 ```js
-async function dot2svg(dot, options = {}) {
-  const Viz = await import("@aduh95/viz.js").then((m) => m.default);
-  const getWorker = await import("@aduh95/viz.js/worker").then(
-    (m) => m.default
-  );
+const dot2svg = require("@aduh95/viz.js/async");
 
-  const worker = getWorker();
-  const viz = new Viz({ worker });
-
-  return viz.renderString(dot, options);
-}
+dot2svg("digraph{1 -> 2 }")
+  .then((svgString) => {
+    console.log(svgString);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 ```
+
+> Note: If you want to your lib to be web-ready, it is recommended to build up
+> from the first code example rather than the CommonJS one.
 
 #### Synchronous API
 
@@ -104,12 +105,12 @@ You can use that to tweak the defaults, the only requirement is to define a
 // worker.js
 import initWASM from "@aduh95/viz.js/worker";
 // If you are not using a bundler that supports package.json#exports
-// use /node_modules/@aduh95/viz.js/dist/render.browser.js instead.
+// use "./node_modules/@aduh95/viz.js/dist/render.browser.js" instead.
 
 import wasmURL from "file-loader!@aduh95/viz.js/wasm";
 // If you are not using a bundler that supports package.json#exports
 // Or doesn't have a file-loader plugin to get URL of the asset,
-// use "/node_modules/@aduh95/viz.js/dist/render.wasm" instead.
+// use "./node_modules/@aduh95/viz.js/dist/render.wasm" instead.
 
 initWASM({
   locateFile() {
@@ -124,14 +125,14 @@ And give feed that module to the main thread:
 //main.js
 import Viz from "@aduh95/viz.js";
 // If you are not using a bundler that supports package.json#exports
-// use /node_modules/@aduh95/viz.js/dist/index.mjs instead.
+// use "./node_modules/@aduh95/viz.js/dist/index.mjs" instead.
 
-const workerURL = "/worker.js";
+import VizWorker from "worker-loader!./worker.js";
 
 let viz;
 async function dot2svg(dot, options) {
   if (viz === undefined) {
-    viz = new Viz({ workerURL });
+    viz = new Viz({ worker: new VizWorker() });
   }
   return viz.renderString(dot, options);
 }

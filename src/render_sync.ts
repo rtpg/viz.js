@@ -1,5 +1,5 @@
 import Module from "./asm.mjs";
-import render from "./renderFunction.js";
+import render from "./viz_wrapper.js";
 
 import type { RenderOptions } from "./types";
 

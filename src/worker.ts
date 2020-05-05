@@ -5,7 +5,7 @@ import initializeWasm, {
   WebAssemblyModule,
   EMCCModuleOverrides,
 } from "./render";
-import render from "./renderFunction.js";
+import render from "./viz_wrapper.js";
 
 /* eslint-disable no-var */
 //
