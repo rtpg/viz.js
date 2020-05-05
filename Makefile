@@ -139,13 +139,13 @@ deps: expat-full graphviz-full $(YARN_PATH)
 .NOTPARALLEL: clean
 clean:
 	@echo "\033[3mHint: use \033[0mmake clobber\033[3m to start from a clean slate.\033[0m" >&2
-	rm -rf build dist sync
-	rm -f wasm worker
-	rm -f test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
+	$(RM) -r build dist sync
+	$(RM) wasm worker
+	$(RM) test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
 
 .PHONY: clobber
 clobber: | clean
-	rm -rf build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
+	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
 
 sync/index.js: | sync
 	echo "module.exports=require('../dist/renderSync.js')" > $@
@@ -209,7 +209,7 @@ dist/render.js: build/render.js build/worker.js | dist
 	$(TERSER) $^ > $@
 
 build/render.wasm: build/render.js
-	[ -f '$@' ] || (rm $^ && $(MAKE) $@)
+	[ -f '$@' ] || ($(RM) $^ && $(MAKE) $@)
 
 dist/render.wasm: build/render.wasm | dist
 	cp $< $@
