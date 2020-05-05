@@ -40,10 +40,12 @@ viz
   .catch((error) => {
     console.error(error);
   })
-  .finally(() => {
-    // If you don't terminate the worker explicitly, it will be terminated at the end of process
-    worker.terminate();
-  });
+  .finally(
+    () =>
+      // You can either terminate explicitly:
+      viz.terminateWorker()
+    // or let it be auto-closed at the end of the process
+  );
 ```
 
 If you want to use it from a CommonJS script, you can use the
