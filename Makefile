@@ -52,89 +52,6 @@ ROLLUP ?= $(YARN) rollup
 .PHONY: all
 all: $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
 
-.PHONY: test
-test: lint test-deno test-node test-ts-integration
-
-.PHONY: lint
-lint: lint-ts lint-test
-
-.PHONY: lint-ts
-lint-ts:
-	$(ESLINT) src --ext .ts
-
-.PHONY: lint-test
-lint-test:
-	$(ESLINT) test
-
-.PHONY: test-node
-test-node: all
-ifdef REPORTER
-	$(MOCHA) test --reporter=$(REPORTER)
-else
-	$(MOCHA) test
-endif
-
-.PHONY: test-ts-integration
-test-ts-integration: pack
-	$(eval TMP := $(shell mktemp -d))
-	mkdir -p $(TMP)/$@
-	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
-	touch $(TMP)/$@/package.json
-	cp sources/viz.js-v$(VIZ_VERSION).tar.gz $(TMP)
-	cd $(TMP)/$@ && $(YARN) add $(TMP)/viz.js-v$(VIZ_VERSION).tar.gz
-	cp test/integration.ts $(TMP)/$@/
-	$(TSC) --noEmit $(TMP)/$@/integration.ts
-
-.PHONY: test-deno
-ifdef DENO
-test-deno: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
-	$(DENO) --importmap test/deno-files/importmap.json -r test/deno.ts
-else
-test-deno:
-	@echo "Deno tests are disabled by environment."
-endif
-
-.PHONY: pack
-pack: all
-	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
-
-.PHONY: publish
-publish: CURRENT_VIZ_VERSION=$(shell $(NODE) -p "require('./package.json').version")
-publish:
-	@git diff --exit-code --quiet . || (\
-		echo "Working directory contains unstaged changes:" && \
-		git status --untracked-files=no --porcelain && \
-		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
-		exit 1 \
-	)
-ifndef SKIP_CHANGELOG_VERIF
-	@(! git diff --exit-code v$(CURRENT_VIZ_VERSION) CHANGELOG.md) || (\
-		echo "No changes to CHANGELOG since previous release. Aborting." && \
-		echo "\033[3mHint: use \033[0mSKIP_CHANGELOG_VERIF=true make $@\033[3m to publish anyway.\033[0m" >&2 && \
-		exit 1 \
-	)
-endif
-	@[ "$(VIZ_VERSION)" != "$(CURRENT_VIZ_VERSION)-$(shell git rev-parse HEAD)" ] || (\
-		echo "You must specify a new version. Aborting." && \
-		echo "\033[3mHint: use \033[0mVIZ_VERSION=<newversion> make $@\033[3m to specify the new version number.\033[0m" >&2 && \
-		exit 1 \
-	)
-	$(NODE) -e 'fs.writeFileSync("./package.json",JSON.stringify(require("./package.json"),(k,v)=>k==="version"?"$(VIZ_VERSION)":v,2)+"\n")'
-	git diff package.json
-	$(MAKE) clean
-	$(MAKE) test
-	git add package.json
-	git commit -m "v$(VIZ_VERSION)"
-	git tag "v$(VIZ_VERSION)"
-	$(YARN) npm publish --access public
-	git push && git push --tags
-
-.PHONY: debug
-debug:
-	$(MAKE) clean
-	EMCC_DEBUG=1 $(CC) $(CC_FLAGS) -s ASSERTIONS=2 -g4 -o build/render.js src/viz.cpp $(CC_INCLUDES)
-	BEAUTIFY=true $(MAKE) all
-
 .PHONY: deps
 deps: expat-full graphviz-full $(YARN_PATH)
 	$(YARN) install
@@ -142,13 +59,13 @@ deps: expat-full graphviz-full $(YARN_PATH)
 .PHONY: clean
 .NOTPARALLEL: clean
 clean:
-	@echo "\033[3mHint: use \033[0mmake clobber\033[3m to start from a clean slate.\033[0m" >&2
+	@echo "\033[3mHint: use \033[0mmake maintainer-clean\033[3m to start from a clean slate.\033[0m" >&2
 	$(RM) -r async build dist sync
 	$(RM) wasm worker
 	$(RM) test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
 
-.PHONY: clobber
-clobber: | clean
+.PHONY: maintainer-clean
+maintainer-clean: | clean
 	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
 
 async/index.js sync/index.js: %/index.js: | %
@@ -228,11 +145,6 @@ dist/render_async.js: build/render_async.js | dist
 dist/render_sync.js: build/render_sync.js build/asm.mjs build/viz_wrapper.js | dist
 	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
 
-test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
-	echo "export default Uint16Array.from([" > $@ && \
-	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
-	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
-
 async build dist $(PREFIX_FULL) sync:
 	mkdir -p $@
 
@@ -267,3 +179,100 @@ sources/expat-$(EXPAT_VERSION).tar.gz: SOURCE=$(EXPAT_SOURCE_URL)
 sources/expat-$(EXPAT_VERSION).tar.gz sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz $(YARN_PATH):
 	curl --fail --create-dirs --location $(SOURCE) -o $@
 
+.PHONY: test
+test: lint test-deno test-node test-ts-integration
+
+.PHONY: lint
+lint: lint-ts lint-test
+
+.PHONY: lint-ts
+lint-ts:
+	$(ESLINT) src --ext .ts
+
+.PHONY: lint-test
+lint-test:
+	$(ESLINT) test
+
+.PHONY: test-node
+test-node: all
+ifdef REPORTER
+	$(MOCHA) test --reporter=$(REPORTER)
+else
+	$(MOCHA) test
+endif
+
+.PHONY: test-ts-integration
+test-ts-integration: pack
+	$(eval TMP := $(shell mktemp -d))
+	mkdir -p $(TMP)/$@
+	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
+	touch $(TMP)/$@/package.json
+	cp sources/viz.js-v$(VIZ_VERSION).tar.gz $(TMP)
+	cd $(TMP)/$@ && $(YARN) add $(TMP)/viz.js-v$(VIZ_VERSION).tar.gz
+	cp test/integration.ts $(TMP)/$@/
+	$(TSC) --noEmit $(TMP)/$@/integration.ts
+
+test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
+	echo "export default Uint16Array.from([" > $@ && \
+	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
+	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
+
+.PHONY: test-deno
+ifdef DENO
+test-deno: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
+	$(DENO) --importmap test/deno-files/importmap.json -r test/deno.ts
+else
+test-deno:
+	$(warning Deno tests are disabled by environment.)
+endif
+
+.PHONY: pack
+pack: all
+	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
+
+.PHONY: publish
+publish: CURRENT_VIZ_VERSION=$(shell $(NODE) -p "require('./package.json').version")
+publish:
+	@echo "Checking for clean git stage..."
+	@git diff --exit-code --quiet . || (\
+		echo "Working directory contains unstaged changes:" && \
+		git status --untracked-files=no --porcelain && \
+		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
+		exit 1 \
+	)
+ifndef SKIP_CHANGELOG_VERIF
+	@echo "Checking for updated CHANGELOG..."
+	@(! git diff --exit-code v$(CURRENT_VIZ_VERSION) CHANGELOG.md) || (\
+		echo "No changes to CHANGELOG since previous release. Aborting." && \
+		echo "\033[3mHint: use \033[0mSKIP_CHANGELOG_VERIF=true make $@\033[3m to publish anyway.\033[0m" >&2 && \
+		exit 1 \
+	)
+else
+	$(warning CHANGELOG check is disabled by environment.)
+endif
+	@echo "Checking for version number..."
+	@[ "$(VIZ_VERSION)" != "$(CURRENT_VIZ_VERSION)-$(shell git rev-parse HEAD)" ] && \
+	$(NODE) -e 'fs.writeFileSync(\
+		"./package.json",\
+		JSON.stringify(\
+			require("./package.json"),\
+			(k,v)=>k==="version"?"$(VIZ_VERSION)":v,\
+			2\
+		)+"\n")' && \
+	! git diff --exit-code package.json || (\
+		echo "You must specify a new version. Aborting." && \
+		echo "\033[3mHint: use \033[0mVIZ_VERSION=<newversion> make $@\033[3m to specify the new version number.\033[0m" >&2 && \
+		echo "\033[3mHint: current Viz version is \033[0m$(CURRENT_VIZ_VERSION)\033[3m, received \033[0m$(VIZ_VERSION)\033[3m.\033[0m" >&2 && \
+		exit 1 \
+	)
+	$(MAKE) clean
+	@echo "Running tests..."
+	$(MAKE) test
+	@echo "Commiting new version..."
+	git add package.json
+	git commit -m "v$(VIZ_VERSION)"
+	git tag "v$(VIZ_VERSION)"
+	@echo "Publishing new version..."
+	$(YARN) npm publish --access public
+	@echo "Pushing new version..."
+	git push && git push --tags
