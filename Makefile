@@ -215,7 +215,7 @@ test-ts-integration: pack
 test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 	echo "export default Uint16Array.from([" > $@ && \
 	hexdump -v -x $< | awk '$$1=" "' OFS=",0x" >> $@ && \
-	echo "]).buffer.slice(2$(shell stat -f%z $< | awk '{if (int($$1) % 2) print ",-1"}'))" >> $@
+	echo "]).buffer.slice(2,$(shell wc -c $< | awk '{if (int($$1) % 2) print "-1"}'))" >> $@
 
 .PHONY: test-deno
 ifdef DENO
