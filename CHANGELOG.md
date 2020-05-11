@@ -44,9 +44,9 @@
   need some extra config to make everything work. You might also use the
   synchronous API, which bundles the asm.js code, although its usage should be
   strictly limited to Node.js or webworker use.
-- **BREAKING:** Remove ES5 and CJS dist files, all modern browsers now support
-  ES2015 modules. If you want to support an older browser, you would need to
-  transpile it yourself or use an older version.
+- **BREAKING:** Remove ES5 dist files, all modern browsers now support ES2015
+  modules. If you want to support an older browser, you would need to transpile
+  it yourself or use an older version.
 - **BREAKING:** On Node.js, `require('@aduh95/viz.js')` returns now a
   `Promise<Viz>`.
 - **DEPRECATED:** `require('@aduh95/viz.js')` is deprecated, use
@@ -64,9 +64,10 @@
   - Remove the need of creating new instances when render fails by resetting
     internal error state.
 - Switch to Mocha and Puppeteer for browser testing.
-- Add synchronous API using asm.js.
+- Add synchronous API using asm.js (`@aduh95/viz.js/sync`).
+- Add a helper module for asynchronous API (`@aduh95/viz.js/async`).
 - Upgrade deps:
-  - Upgrade Emscripten to 1.39.12
+  - Upgrade Emscripten to 1.39.15
   - Upgrade Graphviz to 2.44.0
   - Upgrade Expat to 2.2.9
   - Upgrade Rollup to 2.x
