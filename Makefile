@@ -68,7 +68,11 @@ lint-test:
 
 .PHONY: test-node
 test-node: all
+ifdef REPORTER
 	$(MOCHA) test --reporter=$(REPORTER)
+else
+	$(MOCHA) test
+endif
 
 .PHONY: test-ts-integration
 test-ts-integration: pack
