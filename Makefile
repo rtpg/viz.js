@@ -69,7 +69,7 @@ maintainer-clean: | clean
 	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
 
 async/index.js sync/index.js: %/index.js: | %
-	echo "module.exports=require('../dist/render_$(@D)).js')" > $@
+	echo "module.exports=require('../dist/render_$(@D).js')" > $@
 async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
 	echo "export {default} from '../dist/render_$(@D)'" > $@
 
