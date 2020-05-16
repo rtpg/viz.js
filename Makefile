@@ -220,7 +220,9 @@ test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 .PHONY: test-deno
 ifdef DENO
 test-deno: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
-	$(DENO) --importmap test/deno-files/importmap.json -r test/deno.ts
+	$(DENO) test \
+		--unstable --importmap=test/deno-files/importmap.json --allow-read\
+		-r test/deno.ts
 else
 test-deno:
 	$(warning Deno tests are disabled by environment.)

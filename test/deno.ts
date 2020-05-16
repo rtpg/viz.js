@@ -2,7 +2,7 @@ import { assertStrContains, unreachable } from "std::testing";
 
 /// @deno-types="@aduh95/viz.js/types"
 import Viz from "@aduh95/viz.js";
-const workerURL = "./deno-files/worker.js";
+const workerURL = new URL("./deno-files/worker.js", import.meta.url);
 
 Deno.test({
   name: "Test graph rendering using Deno",
@@ -36,8 +36,6 @@ Deno.test({
       .finally(() => viz.terminateWorker());
   },
 });
-
-Deno.runTests();
 
 async function getViz() {
   return new Viz({ workerURL });
