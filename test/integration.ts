@@ -11,9 +11,12 @@ import vizRenderStringSync from "@aduh95/viz.js/sync";
 Viz({ workerURL: "string" });
 
 new Viz({ workerURL: "string" });
+new Viz({ workerURL: new URL("string") });
 
 // @ts-expect-error
 new Viz({ worker: "string" });
+// @ts-expect-error
+new Viz({ worker: new URL("string") });
 
 const viz = new Viz({ worker: new Worker("string") });
 

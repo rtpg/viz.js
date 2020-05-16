@@ -70,7 +70,7 @@ class WorkerWrapper {
   }
 }
 
-type VizConstructorOptionsWorkerURL = { workerURL: string };
+type VizConstructorOptionsWorkerURL = { workerURL: string | URL };
 type VizConstructorOptionsWorker = { worker: Worker | NodeJSWorker };
 export type VizConstructorOptions =
   | VizConstructorOptionsWorkerURL
