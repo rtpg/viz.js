@@ -3,6 +3,13 @@ import type { Worker } from "worker_threads";
 import type { RenderOptions } from "./types";
 
 let viz: Viz;
+
+/**
+ * Renders a DOT graph to the specified format.
+ * @param src DOT representation of the graph to render.
+ * @param options Options for the rendering engine.
+ * @returns Raw output of Graphviz as a string.
+ */
 export default async function renderStringAsync(
   src: string,
   options?: RenderOptions

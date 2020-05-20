@@ -76,10 +76,28 @@ export type VizConstructorOptions =
   | VizConstructorOptionsWorkerURL
   | VizConstructorOptionsWorker;
 
+/**
+ * The Viz class provides an interface between the rendering worker(s) and the
+ * "main" thread.
+ */
 class Viz {
   private _wrapper: WorkerWrapper;
 
-  constructor(options = {} as VizConstructorOptions) {
+  /**
+   * Constructs a new Viz instance.
+   *
+   * If the `workerURL` option is given, its value must be the URL of one of the
+   * rendering script files included in the distribution (E.G.:
+   * `render.browser.js`).
+   * If the worker option is given, its value must be a `Worker` object
+   * constructed with the URL or path of one of the rendering script files
+   * included in the distribution (E.G.: `render.node.js`).
+   *
+   * @param options An object containing option properties on the worker to use.
+   * @throws {Error} if no options are given.
+   */
+  constructor(options: VizConstructorOptions) {
+    if (!options) options = {} as never;
     if (
       typeof (options as VizConstructorOptionsWorkerURL).workerURL !==
       "undefined"
@@ -101,7 +119,7 @@ class Viz {
   }
 
   /**
-   * Renders a DOT graph to the specified format
+   * Renders a DOT graph to the specified format.
    * @param src DOT representation of the graph to render.
    * @param options Options for the rendering engine.
    * @returns Raw output of Graphviz as a string.
@@ -115,7 +133,7 @@ class Viz {
       images = [],
       yInvert = false,
       nop = 0,
-    } = {} as RenderOptions
+    }: RenderOptions = {}
   ): Promise<string> {
     for (const { path, width, height } of images) {
       files.push({
@@ -146,7 +164,7 @@ class Viz {
    */
   renderJSONObject(
     src: string,
-    options = {} as RenderOptions
+    options: RenderOptions = {}
   ): Promise<GraphvizJSONOutput> {
     let { format } = options;
 
@@ -167,4 +185,4 @@ class Viz {
 
 export default Viz;
 
-export { RenderOptions, GraphvizJSONOutput };
+export type { RenderOptions, GraphvizJSONOutput };
