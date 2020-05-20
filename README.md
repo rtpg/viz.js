@@ -20,8 +20,7 @@ Have a look at [Dagre](https://dagrejs.github.io/), which is not a hack.
 - Install the
   [`@aduh95/viz.js` package](https://www.npmjs.com/package/@aduh95/viz.js) from
   the npm registry.
-- Download from the
-  [GH Actions CI](https://github.com/aduh95/viz.js/actions?query=is%3Asuccess).
+- Download from the [releases page](https://github.com/aduh95/viz.js/releases).
 
 ### Node.js
 
