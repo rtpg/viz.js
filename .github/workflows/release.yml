@@ -1,0 +1,52 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Create Release
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Read version number from package.json
+        run:
+          echo "##[set-output name=VERSION;]$(node -p
+          'require("./package.json").version'
+        id: package_version
+      - name: Read release notes from ChangeLog
+        run:
+          echo "##[set-output name=RELEASE_NOTES;]$(awk '{ if ($1 == "###" &&
+          print_flag == "on") print_flag="off"; if(print_flag == "on") print $0;
+          if ($1 == "###" && print_flag != "off") print_flag="on"; }'
+          "CHANGELOG.md")"
+        id: release_notes
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          draft: true
+          prerelease: false
+      - name: Download archive from NPM registery
+        run:
+          wget https://registry.npmjs.org/@aduh95/viz.js/-/viz.js-${{
+          steps.package_version.outputs.VERSION }}.tgz > ./release.tgz
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release.tgz
+          asset_name: viz.js-${{ github.ref }}
+          asset_content_type: application/gzip

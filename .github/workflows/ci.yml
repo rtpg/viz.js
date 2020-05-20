@@ -23,8 +23,8 @@ jobs:
       - run: sudo apt update
       - name: Install utilities
         run:
-          sudo apt install -y automake build-essential git libgbm1 pkg-config
-          python python-pip unzip
+          sudo apt install -y automake build-essential git pkg-config python
+          python-pip unzip
       - name: Read emsdk version from Makefile
         run:
           echo "##[set-output name=EMSCRIPTEN_VERSION;]$(awk '{if($1
