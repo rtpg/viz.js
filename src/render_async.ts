@@ -3,7 +3,7 @@ import type { Worker } from "worker_threads";
 import type { RenderOptions } from "./types";
 
 let viz: Viz;
-export default async function renderStringSync(
+export default async function renderStringAsync(
   src: string,
   options?: RenderOptions
 ): Promise<string> {
