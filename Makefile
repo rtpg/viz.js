@@ -7,7 +7,7 @@ NODE ?= node
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)
 EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.0
-EMSCRIPTEN_VERSION = 1.39.15
+EMSCRIPTEN_VERSION = 1.39.16
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.gz"
 GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"

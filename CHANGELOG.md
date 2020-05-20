@@ -8,13 +8,13 @@
   (2.1.2 full version) brotlified: 409K; @aduh95/viz.js (3.0.0-beta.7 browser
   version) brotlified: 337K; 18% decrease), should improve performances and
   allows dynamic memory growth.
+- The JS code is now transpiled from TypeScript, and typings are packed within
+  the npm package. You can find the API documentation there!
 - The library is able to reset its internal error state, which makes the
   [v2 wiki caveat](https://github.com/mdaines/viz.js/wiki/Caveats#rendering-graphs-with-user-input)
   unnecessary.
 - Rendering from main thread is no longer supported on the default async API,
   you must use a worker (webworker or worker_thread).
-- The JS code is now transpiled from TypeScript, and typings are packed within
-  the npm package. You can find the API documentation there!
 - There is a synchronous version available for legacy Node.js support.
 
 ##### Breaking changes and deprecations
@@ -67,12 +67,12 @@
 - Add synchronous API using asm.js (`@aduh95/viz.js/sync`).
 - Add a helper module for asynchronous API (`@aduh95/viz.js/async`).
 - Upgrade deps:
-  - Upgrade Emscripten to 1.39.15
+  - Upgrade Emscripten to 1.39.16
   - Upgrade Graphviz to 2.44.0
   - Upgrade Expat to 2.2.9
   - Upgrade Rollup to 2.x
 - Change test chain:
-  - Upgrade Mocha to 7.1.1
+  - Upgrade Mocha to 7.x
   - Use Puppeteer instead of Selenium
 
 ### Viz.js v2.1.2 (2018-12-08)
