@@ -95,19 +95,20 @@ dist/index.mjs: build/index.js | dist
 dist/index.cjs: src/index.cjs | dist
 	$(TERSER) --toplevel $^ > $@
 
-build/render: build/render.js
-	# Creates an ES2015 module from emcc render.js
+build/render: build/render.mjs
+	# Remove env detection mechanism
 	# Don't use any extension to match TS resolution
-	echo "export default function(Module){" |\
-	cat - $^ |\
 	sed \
 		-e "s/ENVIRONMENT_[[:upper:]]*_[[:upper:]]*[[:space:]]*=[^=]/false\&\&/g" \
 		-e "s/var false\&\&false;//g" \
 		-e "s/new TextDecoder(.utf-16le.)/false/g" \
-		> $@ &&\
-	echo "return new Promise(done=>{\
-			Module.onRuntimeInitialized = ()=>done(Module);\
-	})}" >> $@
+		$^ > $@
+
+build/asm: build/asm.js
+	# Creates an ES2015 module from emcc asm.js
+	# Don't use any extension to match TS resolution
+	echo ";export default Module" |\
+	cat $^ - > $@
 
 build/render.browser.js: build/worker.js build/render 
 	$(ROLLUP) -f esm $< > $@
@@ -116,33 +117,30 @@ build/render.node.mjs: src/nodejs-module-interop.mjs build/render.browser.js
 	cat $^ > $@
 
 dist/render.browser.js: DEFINES=\
-		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_WEB=false \
-		-d ENVIRONMENT_IS_WORKER=true -d ENVIRONMENT_IS_NODE=false \
+		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_NODE=false \
+		-d ENVIRONMENT_IS_WEB=true -d ENVIRONMENT_IS_WORKER=true \
 
 dist/render.node.mjs: DEFINES=\
-		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_WEB=false \
-		-d ENVIRONMENT_IS_WORKER=false -d ENVIRONMENT_IS_NODE=true \
+		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_NODE=true \
+		-d ENVIRONMENT_IS_WEB=false -d ENVIRONMENT_IS_WORKER=false \
 
 dist/render.browser.js dist/render.node.mjs: dist/%: build/% | dist
 	$(TERSER) --toplevel $(DEFINES) $<> $@
 
-dist/render.js: build/render.js build/worker.js | dist
-	$(TERSER) $^ > $@
-
-build/render.wasm: build/render.js
+build/render.wasm: build/render.mjs
 	[ -f '$@' ] || ($(RM) $^ && $(MAKE) $@)
 
 dist/render.wasm: build/render.wasm | dist
 	cp $< $@
 
-build/asm.mjs: CC_FLAGS:=$(CC_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0
-build/render.js build/asm.mjs: src/viz.cpp | build
+build/asm.js: CC_FLAGS:=$(CC_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0
+build/render.mjs build/asm.js: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
 
 dist/render_async.js: build/render_async.js | dist
 	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
-dist/render_sync.js: build/render_sync.js build/asm.mjs build/viz_wrapper.js | dist
+dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js | dist
 	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
 
 async build dist $(PREFIX_FULL) sync:

@@ -1,10 +1,7 @@
-import Module from "./asm.mjs";
+import Module from "./asm";
 import render from "./viz_wrapper.js";
 
 import type { RenderOptions } from "./types";
-import type { WebAssemblyModule } from "./render";
-
-let asmModule: WebAssemblyModule;
 
 /**
  * Renders a DOT graph to the specified format.
@@ -16,10 +13,7 @@ export default function renderStringSync(
   src: string,
   options?: RenderOptions
 ): string {
-  if (asmModule == null) {
-    asmModule = Module();
-  }
-  return render(asmModule, src, {
+  return render(Module, src, {
     format: "svg",
     engine: "dot",
     files: [],
