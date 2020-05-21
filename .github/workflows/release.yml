@@ -16,7 +16,7 @@ jobs:
       - name: Install GH Actions toolkit
         run: npm install @actions/core --no-save
       - name: Read release info
-        run:
+        run: >
           node -e 'const core = require("@actions/core"); const { join } =
           require("path"); const { readFileSync } = require("fs"); const {
           version } = require(join(process.env.GITHUB_WORKSPACE,
@@ -24,7 +24,8 @@ jobs:
           readFileSync(join(process.env.GITHUB_WORKSPACE, "CHANGELOG.md"),
           "utf8").split("\n### "); core.setOutput("VERSION", version);
           core.setOutput("RELEASE_NOTES",
-          changes.substring(changes.indexOf("\n")));'
+          changes.substring(changes.indexOf("\n")));
+          core.setOutput("IS_PRE_RELEASE", /alpha|beta|rc/.test(version));'
         id: release_info
       - name: Create Release
         id: create_release
@@ -35,9 +36,9 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: ${{ steps.release_info.outputs.RELEASE_NOTES }}
-          draft: true
-          prerelease: false
-      - name: Download archive from NPM registery
+          draft: false
+          prerelease: ${{ steps.release_info.outputs.IS_PRE_RELEASE }}
+      - name: Download archive from NPM registry
         run:
           curl https://registry.npmjs.org/@aduh95/viz.js/-/viz.js-${{
           steps.release_info.outputs.VERSION }}.tgz > ./release.tgz
