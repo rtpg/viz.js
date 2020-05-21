@@ -238,37 +238,57 @@ publish:
 		echo "Working directory contains unstaged changes:" && \
 		git status --untracked-files=no --porcelain && \
 		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
-		exit 1 \
+		false \
+	)
+	@echo "Checking for version number formatting..."
+	@$(NODE) -e \
+		"/^\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?$$/.test('$(VIZ_VERSION)')||\
+		process.exit(1)" || \
+		(\
+		echo "You must specify a valid version number. Aborting." && \
+		echo "\033[3mHint: use \033[0mVIZ_VERSION=<newversion> make $@\033[3m to specify the new version number.\033[0m" >&2 && \
+		echo "\033[3mHint: current Viz version is \033[0m$(CURRENT_VIZ_VERSION)\033[3m, received \033[0m$(VIZ_VERSION)\033[3m.\033[0m" >&2 &&\
+		false \
 	)
 ifndef SKIP_CHANGELOG_VERIF
+	grep "### @aduh95/Viz.js v$(VIZ_VERSION) (unreleased)" CHANGELOG.md || (\
+		echo "Missing or ill-formed CHANGELOG entry. Aborting." && \
+		false \
+	)
 	@echo "Checking for updated CHANGELOG..."
 	@(! git diff --exit-code v$(CURRENT_VIZ_VERSION) CHANGELOG.md) || (\
 		echo "No changes to CHANGELOG since previous release. Aborting." && \
 		echo "\033[3mHint: use \033[0mSKIP_CHANGELOG_VERIF=true make $@\033[3m to publish anyway.\033[0m" >&2 && \
-		exit 1 \
+		false \
 	)
+	@echo "Updating CHANGELOG version release date..."
+	sed 's/(unreleased)/($(shell date +"%Y-%m-%d"))/' \
+	  < CHANGELOG.md > CHANGELOG.md.tmp
 else
 	$(warning CHANGELOG check is disabled by environment.)
+	$(RM) CHANGELOG.md.tmp
 endif
-	@echo "Checking for version number..."
-	@[ "$(VIZ_VERSION)" != "$(CURRENT_VIZ_VERSION)-$(shell git rev-parse HEAD)" ] && \
-	$(NODE) -e 'fs.writeFileSync(\
+	@echo "Updating package.json version number..."
+	@$(NODE) -e 'fs.writeFileSync(\
 		"./package.json",\
 		JSON.stringify(\
 			require("./package.json"),\
 			(k,v)=>k==="version"?"$(VIZ_VERSION)":v,\
 			2\
 		)+"\n")' && \
-	! git diff --exit-code package.json || (\
+	! git diff --exit-code --quiet package.json || (\
 		echo "You must specify a new version. Aborting." && \
 		echo "\033[3mHint: use \033[0mVIZ_VERSION=<newversion> make $@\033[3m to specify the new version number.\033[0m" >&2 && \
 		echo "\033[3mHint: current Viz version is \033[0m$(CURRENT_VIZ_VERSION)\033[3m, received \033[0m$(VIZ_VERSION)\033[3m.\033[0m" >&2 && \
-		exit 1 \
+		false \
 	)
 	$(MAKE) clean
 	@echo "Running tests..."
 	$(MAKE) test
 	@echo "Commiting new version..."
+	[ -f CHANGELOG.md.tmp ] && \
+		mv CHANGELOG.md.tmp CHANGELOG.md && \
+		git add CHANGELOG.md
 	git add package.json
 	git commit -m "v$(VIZ_VERSION)"
 	git tag "v$(VIZ_VERSION)"

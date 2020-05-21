@@ -18,3 +18,5 @@ test/deno-files/index.d.ts
 
 .yarn/
 .pnp.*
+
+CHANGELOG.md.tmp
