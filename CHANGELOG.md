@@ -1,6 +1,6 @@
 # Changelog
 
-### @aduh95/Viz.js v3.0.0 (unreleased)
+### @aduh95/Viz.js v3.0.0 (2020-05-27)
 
 ##### Notable changes
 
@@ -19,8 +19,8 @@
 
 ##### Breaking changes and deprecations
 
-- **BREAKING:** Bump required version of Node.js to v12 LTS (might work on v10
-  LTS using CLI flags or the synchronous API).
+- **BREAKING:** Bump required version of Node.js to v12.17.0+. _Older Node.js
+  version may support the synchronous API._
 - **BREAKING:** Remove `Viz.prototype.renderSVGElement`. You can use
   `renderString` and `DOMParser` to achieve the same result.
 - **BREAKING:** Remove `Viz.prototype.renderImageElement`. You can use
