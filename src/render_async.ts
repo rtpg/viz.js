@@ -15,14 +15,14 @@ export default async function renderStringAsync(
   options?: RenderOptions
 ): Promise<string> {
   if (viz == null) {
-    /* eslint-disable @typescript-eslint/ban-ts-ignore */
+    /* eslint-disable @typescript-eslint/ban-ts-comment */
     const [Viz, getWorker] = await Promise.all([
       // @ts-ignore
       import("@aduh95/viz.js"),
       // @ts-ignore
       import("@aduh95/viz.js/worker"),
     ]);
-    /* eslint-enable @typescript-eslint/ban-ts-ignore */
+    /* eslint-enable @typescript-eslint/ban-ts-comment */
     viz = new Viz.default({ worker: getWorker.default() as Worker });
   }
   return viz.renderString(src, options);

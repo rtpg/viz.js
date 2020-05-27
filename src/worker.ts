@@ -19,7 +19,7 @@ declare var addEventListener: (type: "message", data: EventListener) => void;
 //
 /* eslint-enable no-var */
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: exports must be declared in order to produce valid ES6 code
 let exports: (
   moduleOverrides?: EMCCModuleOverrides
@@ -57,7 +57,7 @@ export function onmessage(event: MessageEvent): Promise<void> {
 }
 
 if (ENVIRONMENT_IS_WORKER) {
-  let resolveModuleOverrides: Function;
+  let resolveModuleOverrides: (value?: EMCCModuleOverrides) => void;
   asyncModuleOverrides = new Promise((done) => {
     resolveModuleOverrides = done;
   });
@@ -89,7 +89,7 @@ if (ENVIRONMENT_IS_WORKER) {
         );
       },
     } as Promise<never>;
-    exports = (moduleOverrides): Worker =>
+    exports = (moduleOverrides: EMCCModuleOverrides): Worker =>
       new Worker(__filename, {
         type: "module",
         workerData: { __filename, moduleOverrides },
@@ -106,7 +106,7 @@ if (ENVIRONMENT_IS_WORKER) {
   } else {
     // Worker spawned by another module or script, exports a function that lets
     // user define a custom override objects.
-    let resolveModuleOverrides: Function;
+    let resolveModuleOverrides: (value: EMCCModuleOverrides) => void;
     asyncModuleOverrides = new Promise((done) => {
       resolveModuleOverrides = done;
     });
