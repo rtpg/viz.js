@@ -1,5 +1,9 @@
 # Changelog
 
+### @aduh95/Viz.js v3.0.1 (2020-06-09)
+
+Fix issue with Webpack v4.
+
 ### @aduh95/Viz.js v3.0.0 (2020-05-27)
 
 ##### Notable changes
