@@ -99,6 +99,7 @@ build/render: build/render.mjs
 	# Remove env detection mechanism
 	# Don't use any extension to match TS resolution
 	sed \
+		-e "s/import.meta.url/false/" \
 		-e "s/ENVIRONMENT_[[:upper:]]*_[[:upper:]]*[[:space:]]*=[^=]/false\&\&/g" \
 		-e "s/var false\&\&false;//g" \
 		-e "s/new TextDecoder(.utf-16le.)/false/g" \
