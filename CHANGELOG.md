@@ -1,5 +1,12 @@
 # Changelog
 
+### @aduh95/Viz.js v3.0.2 (unreleased)
+
+- Update Graphviz to
+  [1.44.1](https://gitlab.com/graphviz/graphviz/-/blob/master/CHANGELOG.md#2441-2020-06-29).
+- Bump Emscripten version to
+  [1.39.19](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#13919-07072020).
+
 ### @aduh95/Viz.js v3.0.1 (2020-06-09)
 
 Fix issue with Webpack v4.
