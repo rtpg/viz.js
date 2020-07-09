@@ -1,6 +1,6 @@
 # Changelog
 
-### @aduh95/Viz.js v3.0.2 (unreleased)
+### @aduh95/Viz.js v3.0.2 (2020-07-09)
 
 - Update Graphviz to
   [1.44.1](https://gitlab.com/graphviz/graphviz/-/blob/master/CHANGELOG.md#2441-2020-06-29).
