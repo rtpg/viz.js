@@ -1,5 +1,10 @@
 # Changelog
 
+### @aduh95/Viz.js v3.1.0 (unreleased)
+
+- Auto-init WASM in `render.browser.js`
+  ([#9](https://github.com/aduh95/viz.js/pull/9))
+
 ### @aduh95/Viz.js v3.0.2 (2020-07-09)
 
 - Update Graphviz to
