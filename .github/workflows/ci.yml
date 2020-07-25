@@ -9,6 +9,9 @@ on:
   pull_request:
     branches: [master]
 
+env:
+  EM_CACHE_FOLDER: 'emsdk-cache'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,22 +34,16 @@ jobs:
           =="EMSCRIPTEN_VERSION")print $3}' Makefile)"
         id: emsdk
       - name: Cache emsdk
-        uses: actions/cache@v1
-        id: cache # This is important!
+        id: cache-system-libraries
+        uses: actions/cache@v2
         with:
-          # Set to the same folder as actions-cache-folder (more below)
-          path: "emsdk-cache"
-          # Set the end bit to emsdk version
-          key:
-            ${{ runner.os }}-emsdk-${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}-${{ runner.os }}
       - name: Setup emsdk (use cache if found, create otherwise)
-        uses: mymindstorm/setup-emsdk@v2
+        uses: mymindstorm/setup-emsdk@v6
         with:
           version: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
-          actions-cache-folder: "emsdk-cache"
-          # This stops it from using tc.cacheDir since we are using
-          #  actions/cache.
-          no-cache: true
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
       - name: Install Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         env:
