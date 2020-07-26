@@ -57,21 +57,13 @@ export function onmessage(event: MessageEvent): Promise<void> {
 }
 
 if (ENVIRONMENT_IS_WORKER) {
-  let resolveModuleOverrides: (value?: EMCCModuleOverrides) => void;
-  asyncModuleOverrides = new Promise((done) => {
-    resolveModuleOverrides = done;
-  });
+  // Default to no overrides
+  asyncModuleOverrides = Promise.resolve({});
+
   exports = (
     moduleOverrides: EMCCModuleOverrides
   ): Promise<EMCCModuleOverrides> => {
-    if (resolveModuleOverrides) {
-      resolveModuleOverrides(moduleOverrides);
-      return asyncModuleOverrides;
-    } else {
-      return Promise.resolve().then(
-        () => exports(moduleOverrides) as Promise<any>
-      );
-    }
+    return (asyncModuleOverrides = Promise.resolve(moduleOverrides));
   };
   addEventListener("message", onmessage);
 } else if (ENVIRONMENT_IS_NODE) {
