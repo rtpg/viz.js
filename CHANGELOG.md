@@ -4,6 +4,8 @@
 
 - Auto-init WASM in `render.browser.js`
   ([#9](https://github.com/aduh95/viz.js/pull/9))
+- Bump Emscripten version to
+  [1.40.0](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#1400-07302020).
 
 ### @aduh95/Viz.js v3.0.2 (2020-07-09)
 
