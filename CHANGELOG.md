@@ -1,6 +1,6 @@
 # Changelog
 
-### @aduh95/Viz.js v3.1.0 (unreleased)
+### @aduh95/Viz.js v3.1.0 (2020-07-31)
 
 - Auto-init WASM in `render.browser.js`
   ([#9](https://github.com/aduh95/viz.js/pull/9))
