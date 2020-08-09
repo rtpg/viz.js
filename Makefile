@@ -13,12 +13,16 @@ EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2
 GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
+USE_CLOSURE ?= 0
+
 EMCONFIGURE ?= emconfigure
 EMMAKE ?= emmake
 EMCC ?= emcc
 CC = $(EMCC)
-CC_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 -s ENVIRONMENT=node,worker --closure 0 -g1
-CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
+CC_FLAGS = -c 
+CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz
+LINK_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=0 --closure $(USE_CLOSURE) -g1
+LINK_INCLUDES = -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
 YARN_PATH = $(abspath $(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))
 YARN ?= $(NODE) $(YARN_PATH)
@@ -95,26 +99,34 @@ dist/index.mjs: build/index.js | dist
 dist/index.cjs: src/index.cjs | dist
 	$(TERSER) --toplevel $^ > $@
 
-build/render: build/render.mjs
-	# Remove env detection mechanism
-	# Don't use any extension to match TS resolution
-	sed \
-		-e "s/import.meta.url/false/" \
-		-e "s/ENVIRONMENT_[[:upper:]]*_[[:upper:]]*[[:space:]]*=[^=]/false\&\&/g" \
-		-e "s/var false\&\&false;//g" \
-		-e "s/new TextDecoder(.utf-16le.)/false/g" \
-		$^ > $@
-
 build/asm: build/asm.js
 	# Creates an ES2015 module from emcc asm.js
 	# Don't use any extension to match TS resolution
+ifeq ($(USE_CLOSURE), 0)
 	echo ";export default Module" |\
 	cat $^ - > $@
+else
+	sed -e 's/(module.exports[[:space:]]*=/false;export default(/' $< > $@
+endif
 
-build/render.browser.js: build/worker.js build/render 
+build/browser/worker.js build/browser/viz_wrapper.js: build/browser/%.js: build/%.js | build/browser
+	cp $< $@
+build/node/worker.js build/node/viz_wrapper.js: build/node/%.js: build/%.js | build/node
+	cp $< $@
+
+build/browser/render: build/browser/render.mjs
+	sed \
+		-e "s/import.meta.url/false/" \
+		-e "s/new TextDecoder(.utf-16le.)/false/g" \
+		$< > $@
+
+build/render.browser.js build/render.node.js: build/render.%.js: build/%/worker.js build/%/render build/%/viz_wrapper.js
 	$(ROLLUP) -f esm $< > $@
 
-build/render.node.mjs: src/nodejs-module-interop.mjs build/render.browser.js
+build/node/render: build/node/render.mjs | build/node
+	cp $< $@
+
+build/render.node.mjs: src/nodejs-module-interop.mjs build/render.node.js
 	cat $^ > $@
 
 dist/render.browser.js: DEFINES=\
@@ -128,23 +140,37 @@ dist/render.node.mjs: DEFINES=\
 dist/render.browser.js dist/render.node.mjs: dist/%: build/% | dist
 	$(TERSER) --module $(DEFINES) $<> $@
 
-build/render.wasm: build/render.mjs
+build/render.wasm: build/browser/render.wasm build/node/render.wasm
+	@cmp $^ || (\
+		echo "WASM files differ" && false \
+	)
+	cp $< $@
+
+build/browser/render.wasm build/node/render.wasm: build/%/render.wasm: build/%/render.mjs
 	[ -f '$@' ] || ($(RM) $^ && $(MAKE) $@)
 
 dist/render.wasm: build/render.wasm | dist
 	cp $< $@
 
-build/asm.js: CC_FLAGS:=$(CC_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0
-build/render.mjs build/asm.js: src/viz.cpp | build
+build/render.o: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
-	$(CC) $(CC_FLAGS) -Oz -o $@ $< $(CC_INCLUDES)
+	$(CC) $(CC_FLAGS) -o $@ $< $(CC_INCLUDES)
+
+build/asm.js: LINK_FLAGS:=$(LINK_FLAGS) -s WASM=0 -s WASM_ASYNC_COMPILATION=0 --memory-init-file 0
+build/browser/render.mjs: | build/browser
+build/node/render.mjs: | build/node
+build/asm.js build/node/render.mjs: ENVIRONMENT:=node
+build/browser/render.mjs: ENVIRONMENT:=worker
+build/node/render.mjs build/browser/render.mjs build/asm.js: build/render.o
+	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
+	$(CC) $(LINK_FLAGS) -s ENVIRONMENT=$(ENVIRONMENT) -Oz -o $@ $< $(LINK_INCLUDES)
 
 dist/render_async.js: build/render_async.js | dist
 	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
 dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js | dist
-	$(ROLLUP) -f commonjs $< | $(TERSER) --toplevel > $@
+	$(ROLLUP) -f commonjs --exports default $< | $(TERSER) --toplevel > $@
 
-async build dist $(PREFIX_FULL) sync:
+async build build/node build/browser dist $(PREFIX_FULL) sync:
 	mkdir -p $@
 
 .PHONY: expat–full
