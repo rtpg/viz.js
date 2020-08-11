@@ -40,7 +40,7 @@ PREAMBLE = "/**\n\
 BEAUTIFY?=false
 
 ifeq ($(BEAUTIFY), false)
-	TERSER = $(YARN) terser --warn -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)'
+	TERSER = $(YARN) terser --warn -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' --ecma 2020
 else
 	TERSER = $(YARN) terser --warn -b
 endif
@@ -90,7 +90,7 @@ test/deno-files/index.d.ts: dist/index.d.ts
 	echo "declare type NodeJSWorker=never;" >> $@
 
 dist/index.mjs: build/index.js | dist
-	$(TERSER) --toplevel $^ > $@
+	$(TERSER) --module $^ > $@
 
 dist/index.cjs: src/index.cjs | dist
 	$(TERSER) --toplevel $^ > $@
@@ -126,7 +126,7 @@ dist/render.node.mjs: DEFINES=\
 		-d ENVIRONMENT_IS_WEB=false -d ENVIRONMENT_IS_WORKER=false \
 
 dist/render.browser.js dist/render.node.mjs: dist/%: build/% | dist
-	$(TERSER) --toplevel $(DEFINES) $<> $@
+	$(TERSER) --module $(DEFINES) $<> $@
 
 build/render.wasm: build/render.mjs
 	[ -f '$@' ] || ($(RM) $^ && $(MAKE) $@)
