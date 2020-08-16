@@ -10,7 +10,7 @@ on:
     branches: [master]
 
 env:
-  EM_CACHE_FOLDER: 'emsdk-cache'
+  EM_CACHE_FOLDER: "emsdk-cache"
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         node: [14.x]
-        deno: [v1.2.3]
+        deno: [v1.3.2]
 
     steps:
       - uses: actions/checkout@v2
