@@ -44,9 +44,9 @@ PREAMBLE = "/**\n\
 BEAUTIFY?=false
 
 ifeq ($(BEAUTIFY), false)
-	TERSER = $(YARN) terser --warn -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' --ecma 2020
+	TERSER = $(YARN) terser -m -b beautify=$(BEAUTIFY),preamble='$(PREAMBLE)' --ecma 2020
 else
-	TERSER = $(YARN) terser --warn -b
+	TERSER = $(YARN) terser -b
 endif
 
 ESLINT ?= $(YARN) eslint
