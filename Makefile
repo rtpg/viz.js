@@ -57,8 +57,11 @@ ROLLUP ?= $(YARN) rollup
 all: $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
 
 .PHONY: deps
-deps: expat-full graphviz-full $(YARN_PATH)
-	$(YARN) install
+deps: expat-full graphviz-full node_modules
+
+.PHONY: node_modules
+node_modules: $(YARN_PATH)
+	$(YARN) install --immutable
 
 .PHONY: clean
 .NOTPARALLEL: clean
@@ -68,9 +71,12 @@ clean:
 	$(RM) wasm worker
 	$(RM) test/deno-files/render.wasm.uint8.js test/deno-files/index.d.ts
 
+npm-clean:
+	$(RM) -r $(YARN_DIR) node_modules
+
 .PHONY: maintainer-clean
-maintainer-clean: | clean
-	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE) $(YARN_DIR) node_modules
+maintainer-clean: | clean npm-clean
+	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE)
 
 async/index.js sync/index.js: %/index.js: | %
 	echo "module.exports=require('../dist/render_$(@D).js')" > $@
