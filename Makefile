@@ -9,7 +9,7 @@ EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.1
 EMSCRIPTEN_VERSION = 2.0.2
 
-EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.gz"
+EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.gz"
 GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
@@ -19,7 +19,7 @@ EMCONFIGURE ?= emconfigure
 EMMAKE ?= emmake
 EMCC ?= emcc
 CC = $(EMCC)
-CC_FLAGS = -c 
+CC_FLAGS = -c
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz
 LINK_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=$(USE_CLOSURE) --closure $(USE_CLOSURE) -g1
 LINK_INCLUDES = -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
