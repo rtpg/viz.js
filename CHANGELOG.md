@@ -4,6 +4,8 @@
 
 - Bump Emscripten version to
   [2.0.7](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#207-10132020).
+- Remove engine restriction to allow use of the library on Node.js v10.x
+  [#11](https://github.com/aduh95/viz.js/issues/11).
 
 ### @aduh95/Viz.js v3.1.0 (2020-07-31)
 

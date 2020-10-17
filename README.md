@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/aduh95/viz.js/workflows/CI/badge.svg)](https://github.com/aduh95/viz.js/actions)
 [![NPM version](https://img.shields.io/npm/v/@aduh95/viz.js.svg)](https://www.npmjs.org/package/@aduh95/viz.js)
-[![Node >=13.2](https://img.shields.io/node/v/@aduh95/viz.js.svg)](https://nodejs.org)
 [![License MIT](https://img.shields.io/npm/l/@aduh95/viz.js.svg)](https://github.com/aduh95/viz.js/blob/master/LICENCE)
 
 This project builds [Graphviz](http://www.graphviz.org) with
@@ -23,6 +22,11 @@ Have a look at [Dagre](https://dagrejs.github.io/), which is not a hack.
 - Download from the [releases page](https://github.com/aduh95/viz.js/releases).
 
 ### Node.js
+
+**N.B.**: This library has been fully tested with Node.js 12 LTS and Node.js
+13.2+. If you need support for older versions of Node.js (E.G.: 10.x), you
+should restrict the use of `viz.js` to the [synchronous API](#synchronous-api)
+only.
 
 ```js
 import Viz from "@aduh95/viz.js";

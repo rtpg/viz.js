@@ -20,9 +20,6 @@
     }
   },
   "type": "commonjs",
-  "engines": {
-    "node": "^12.17.0 || >=13.2.0"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/aduh95/viz.js.git"
