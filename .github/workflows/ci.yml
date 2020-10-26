@@ -15,12 +15,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node: [14.x]
-        deno: [v1.4.6]
-
     steps:
       - uses: actions/checkout@v2
       - run: sudo apt update
@@ -44,19 +38,10 @@ jobs:
         with:
           version: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-      - name: Install Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
-        env:
-          RUNNER_TEMP: /tmp
-        with:
-          node-version: ${{ matrix.node }}
-      - name: Install Deno ${{ matrix.deno }}
-        run:
-          curl -fsSL https://deno.land/x/install/install.sh | sudo
-          DENO_INSTALL=/usr/local sh -s ${{ matrix.deno }}
       - name: Download and build dependencies
         run: make deps -j
         env:
+          RUNNER_TEMP: /tmp
           CI: true
       - name: Build and pack Viz.js
         run: make pack -j
@@ -64,9 +49,86 @@ jobs:
           VIZ_VERSION: unreleased-${{ github.sha }}
       - name: Run tests
         run: make test -j
+        env:
+          DENO:
       - name: Upload artifact if tests are green
         if: success()
         uses: actions/upload-artifact@v1
         with:
-          name: viz.js-unreleased-${{ github.sha }}.tar.gz
+          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
           path: sources/viz.js-vunreleased-${{ github.sha }}.tar.gz
+
+  test-node:
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [12.x, 14.x, 15.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tarball from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
+      - name: Install Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Run tests
+        run: make test-node -j
+        env:
+          USE_TARBALL: viz.js-vunreleased-${{ github.sha }}.tar.gz
+
+  test-node-legacy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [v10.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tarball from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
+      - name: Install Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        env:
+          RUNNER_TEMP: /tmp
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Prepare tests
+        run:
+          rm package.json && npm i mocha && npm i viz.js-vunreleased-${{
+          github.sha }}.tar.gz
+      - name: Run tests
+        run:
+          node ./node_modules/.bin/mocha test/node.js -f "should render a graph
+          using sync version"
+
+  test-deno:
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        deno: [v1.4.6]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tarball from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
+      - name: Install Deno ${{ matrix.deno }}
+        run:
+          curl -fsSL https://deno.land/x/install/install.sh | sudo
+          DENO_INSTALL=/usr/local sh -s ${{ matrix.deno }}
+      - name: Run tests
+        run: make test-deno -j
+        env:
+          USE_TARBALL: viz.js-vunreleased-${{ github.sha }}.tar.gz
