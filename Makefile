@@ -7,7 +7,7 @@ NODE ?= node
 EMSCRIPTEN_VERSION = 2.0.8
 EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.1
-VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)
+VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.gz"
 GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"
@@ -52,6 +52,7 @@ endif
 ESLINT ?= $(YARN) eslint
 MOCHA ?= $(YARN) mocha
 ROLLUP ?= $(YARN) rollup
+SEMVER ?= $(YARN) semver
 
 DIST_FILES = $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
 .PHONY: all
@@ -283,6 +284,9 @@ pack: all
 .PHONY: publish
 publish: CURRENT_VIZ_VERSION=$(shell $(NODE) -p "require('./package.json').version")
 publish:
+ifeq "$(origin VIZ_VERSION)" "file"
+	$(error You must define a new version number.)
+endif
 	@echo "Checking for clean git stage..."
 	@git diff --exit-code --quiet . || (\
 		echo "Working directory contains unstaged changes:" && \
@@ -290,13 +294,12 @@ publish:
 		echo "Stage, commit, stash, or discard those changes before publishing a new version." && \
 		false \
 	)
-	@echo "Checking for version number formatting..."
+	@echo "Checking for version number..."
 	@$(NODE) -e \
-		"/^\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?$$/.test('$(VIZ_VERSION)')||\
-		process.exit(1)" || \
+		"require('semver/functions/gt')('$(VIZ_VERSION)', '$(CURRENT_VIZ_VERSION)') || process.exit(1)" || \
 		(\
 		echo "You must specify a valid version number. Aborting." && \
-		echo "\033[3mHint: use \033[0mVIZ_VERSION=<newversion> make $@\033[3m to specify the new version number.\033[0m" >&2 && \
+		echo "\033[3mHint: use \033[0mmake $@/patch\033[3m to create a patch release.\033[0m" >&2 && \
 		echo "\033[3mHint: current Viz version is \033[0m$(CURRENT_VIZ_VERSION)\033[3m, received \033[0m$(VIZ_VERSION)\033[3m.\033[0m" >&2 &&\
 		false \
 	)
@@ -342,7 +345,14 @@ endif
 	git add package.json
 	git commit -m "v$(VIZ_VERSION)"
 	git tag "v$(VIZ_VERSION)"
-	@echo "Publishing new version..."
+	@echo "Publishing new version to npm registery..."
 	$(YARN) npm publish --access public
-	@echo "Pushing new version..."
+	@echo "Pushing new version to git repository..."
 	git push && git push --tags
+
+.PHONY: publish/%
+publish/%: NEW_VIZ_VERSION=$(shell $(SEMVER) $(VIZ_VERSION) -i $(@F))
+publish/%:
+	$(info Publishing a new $(@F) release for @aduh95/viz.js…)
+	$(info $(VIZ_VERSION) -> $(NEW_VIZ_VERSION))
+	@VIZ_VERSION=$(NEW_VIZ_VERSION) $(MAKE) publish
