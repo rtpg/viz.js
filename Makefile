@@ -62,7 +62,7 @@ all: $(DIST_FILES) | $(DEPS_FOLDER)
 deps: expat-full graphviz-full
 
 .NOTPARALLEL: node_modules
-node_modules: $(YARN_PATH) yarn.lock
+node_modules: $(YARN_PATH) | yarn.lock
 	$(YARN) install --immutable
 	touch $@
 
@@ -256,8 +256,8 @@ test-ts-integration: sources/viz.js-v$(VIZ_VERSION).tar.gz | $(YARN_PATH) node_m
 	mkdir -p $(TMP)/$@
 	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
 	touch $(TMP)/$@/package.json
-	cp sources/viz.js-v$(VIZ_VERSION).tar.gz $(TMP)
-	cd $(TMP)/$@ && $(YARN) add $(TMP)/viz.js-v$(VIZ_VERSION).tar.gz
+	cp $< $(TMP)/viz.js.tar.gz
+	cd $(TMP)/$@ && $(YARN) add $(TMP)/viz.js.tar.gz
 	cp test/integration.ts $(TMP)/$@/
 	$(TSC) --noEmit $(TMP)/$@/integration.ts
 
@@ -268,7 +268,7 @@ test/deno-files/render.wasm.arraybuffer.js: dist/render.wasm
 
 .PHONY: test-deno
 ifdef DENO
-test-deno: all test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts
+test-deno: test/deno-files/render.wasm.arraybuffer.js test/deno-files/index.d.ts | $(DIST_FILES)
 	$(DENO) test \
 		--unstable --importmap=test/deno-files/importmap.json --allow-read\
 		-r test/deno.ts
@@ -278,12 +278,13 @@ test-deno:
 endif
 
 .PHONY: pack
-pack: all
-	$(YARN) pack -o sources/viz.js-v$(VIZ_VERSION).tar.gz
+pack: sources/viz.js-v$(VIZ_VERSION).tar.gz
+sources/viz.js-v$(VIZ_VERSION).tar.gz: $(DIST_FILES) | $(YARN_PATH)
+	$(YARN) pack -o $@
 
 .PHONY: publish
 publish: CURRENT_VIZ_VERSION=$(shell $(NODE) -p "require('./package.json').version")
-publish:
+publish: | $(YARN_PATH)
 ifeq "$(origin VIZ_VERSION)" "file"
 	$(error You must define a new version number.)
 endif
