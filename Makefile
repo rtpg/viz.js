@@ -301,7 +301,7 @@ publish:
 		false \
 	)
 ifndef SKIP_CHANGELOG_VERIF
-	grep "### @aduh95/Viz.js v$(VIZ_VERSION) (unreleased)" CHANGELOG.md || (\
+	head -3 CHANGELOG.md | grep "### _unreleased_" || (\
 		echo "Missing or ill-formed CHANGELOG entry. Aborting." && \
 		false \
 	)
@@ -312,7 +312,7 @@ ifndef SKIP_CHANGELOG_VERIF
 		false \
 	)
 	@echo "Updating CHANGELOG version release date..."
-	sed 's/(unreleased)/($(shell date +"%Y-%m-%d"))/' \
+	sed 's#_unreleased_#@aduh95/Viz.js v$(VIZ_VERSION) ($(shell date +"%Y-%m-%d"))#' \
 	  < CHANGELOG.md > CHANGELOG.md.tmp
 else
 	$(warning CHANGELOG check is disabled by environment.)
