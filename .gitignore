@@ -1,11 +1,11 @@
-build-full/
 build/
+build-deps/
+build-full/
+debug/
+node_modules/
 prefix-full/
 prefix-lite/
-build-main/
 sources/
-node_modules/
-debug/
 
 dist/
 /async/

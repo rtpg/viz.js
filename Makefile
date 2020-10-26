@@ -1,13 +1,13 @@
-PREFIX_FULL = $(abspath ./prefix-full)
-PREFIX_LITE = $(abspath ./prefix-lite)
+DEPS_FOLDER = $(abspath ./build-deps)
 DIST_FOLDER = $(abspath ./dist)
+PREFIX_FULL = $(abspath ./prefix-full)
 
 NODE ?= node
 
-VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)
+EMSCRIPTEN_VERSION = 2.0.7
 EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.1
-EMSCRIPTEN_VERSION = 2.0.7
+VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")-$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.gz"
 GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"
@@ -53,15 +53,27 @@ ESLINT ?= $(YARN) eslint
 MOCHA ?= $(YARN) mocha
 ROLLUP ?= $(YARN) rollup
 
+DIST_FILES = $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
 .PHONY: all
-all: $(shell $(NODE) -p 'require("./package.json").files.join(" ")')
+all: $(DIST_FILES) | $(DEPS_FOLDER)
 
 .PHONY: deps
-deps: expat-full graphviz-full node_modules
+deps: expat-full graphviz-full
 
-.PHONY: node_modules
-node_modules: $(YARN_PATH)
+.NOTPARALLEL: node_modules
+node_modules: $(YARN_PATH) yarn.lock
 	$(YARN) install --immutable
+	touch $@
+
+node_modules/%: node_modules
+	touch $@	
+
+yarn.lock:
+	@[ -f '$@' ] || (\
+		echo "Missing lock file. Try running 'git checkout -- $@'." && \
+		false \
+	)
+	touch $@
 
 .PHONY: clean
 .NOTPARALLEL: clean
@@ -76,7 +88,10 @@ npm-clean:
 
 .PHONY: maintainer-clean
 maintainer-clean: | clean npm-clean
-	$(RM) -r build build-full $(PREFIX_FULL) $(PREFIX_LITE)
+	$(RM) -r build $(DEPS_FOLDER) $(PREFIX_FULL)
+
+$(DEPS_FOLDER):
+	$(error You must run `make deps` first.)
 
 async/index.js sync/index.js: %/index.js: | %
 	echo "module.exports=require('../dist/render_$(@D).js')" > $@
@@ -86,11 +101,11 @@ async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build/viz_wrapper.js build/worker.js build/index.js build/render_async.js build/render_sync.js: build/%.js: src/%.ts | build
+build/viz_wrapper.js build/worker.js build/index.js build/render_async.js build/render_sync.js: build/%.js: src/%.ts node_modules/typescript | build
 	$(TSC) $(TS_FLAGS) --outDir $(@D) -m es2020 --target esnext $<
 
-dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts: dist/%.d.ts: src/%.ts | dist
-	$(TSC) $(TS_FLAGS) --outDir $(@D) -d --emitDeclarationOnly $^
+dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts: dist/%.d.ts: src/%.ts node_modules/typescript | dist
+	$(TSC) $(TS_FLAGS) --outDir $(@D) -d --emitDeclarationOnly $<
 
 dist/types.d.ts: src/types.d.ts | dist
 	cp $< $@
@@ -99,11 +114,11 @@ test/deno-files/index.d.ts: dist/index.d.ts
 	sed '\,^///, d;/as NodeJSWorker/ d;s#"./types";#"../../dist/types.d.ts";#' $< > $@
 	echo "declare type NodeJSWorker=never;" >> $@
 
-dist/index.mjs: build/index.js | dist
-	$(TERSER) --module $^ > $@
+dist/index.mjs: build/index.js node_modules/terser | dist
+	$(TERSER) --module $< > $@
 
-dist/index.cjs: src/index.cjs | dist
-	$(TERSER) --toplevel $^ > $@
+dist/index.cjs: src/index.cjs node_modules/terser | dist
+	$(TERSER) --toplevel $< > $@
 
 build/asm: build/asm.js
 	# Creates an ES2015 module from emcc asm.js
@@ -126,7 +141,7 @@ build/browser/render: build/browser/render.mjs
 		-e "s/new TextDecoder(.utf-16le.)/false/g" \
 		$< > $@
 
-build/render.browser.js build/render.node.js: build/render.%.js: build/%/worker.js build/%/render build/%/viz_wrapper.js
+build/render.browser.js build/render.node.js: build/render.%.js: build/%/worker.js build/%/render build/%/viz_wrapper.js node_modules/rollup
 	$(ROLLUP) -f esm $< > $@
 
 build/node/render: build/node/render.mjs | build/node
@@ -143,7 +158,7 @@ dist/render.node.mjs: DEFINES=\
 		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_NODE=true \
 		-d ENVIRONMENT_IS_WEB=false -d ENVIRONMENT_IS_WORKER=false \
 
-dist/render.browser.js dist/render.node.mjs: dist/%: build/% | dist
+dist/render.browser.js dist/render.node.mjs: dist/%: build/% node_modules/terser | dist
 	$(TERSER) --module $(DEFINES) $<> $@
 
 build/render.wasm: build/browser/render.wasm build/node/render.wasm
@@ -154,6 +169,7 @@ build/render.wasm: build/browser/render.wasm build/node/render.wasm
 
 build/browser/render.wasm build/node/render.wasm: build/%/render.wasm: build/%/render.mjs
 	[ -f '$@' ] || ($(RM) $^ && $(MAKE) $@)
+	touch $@
 
 dist/render.wasm: build/render.wasm | dist
 	cp $< $@
@@ -171,22 +187,22 @@ build/node/render.mjs build/browser/render.mjs build/asm.js: build/render.o
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(LINK_FLAGS) -s ENVIRONMENT=$(ENVIRONMENT) -Oz -o $@ $< $(LINK_INCLUDES)
 
-dist/render_async.js: build/render_async.js | dist
+dist/render_async.js: build/render_async.js node_modules/terser | dist
 	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
-dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js | dist
+dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js node_modules/rollup node_modules/terser | dist
 	$(ROLLUP) -f commonjs --exports default $< | $(TERSER) --toplevel > $@
 
 async build build/node build/browser dist $(PREFIX_FULL) sync:
 	mkdir -p $@
 
 .PHONY: expat–full
-expat-full: build-full/expat-$(EXPAT_VERSION) | $(PREFIX_FULL)
+expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL)
 	grep $(EXPAT_VERSION) $</expat_config.h
 	cd $< && $(EMCONFIGURE) ./configure --quiet --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
 	cd $< && $(EMMAKE) $(MAKE) --quiet -C lib all install
 
 .PHONY: graphviz-full
-graphviz-full: build-full/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
+graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
 	cd $< && ./configure --quiet
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
@@ -201,7 +217,7 @@ graphviz-full: build-full/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	cd $</plugin && $(EMMAKE) $(MAKE) --quiet install
 
 
-build-full/expat-$(EXPAT_VERSION) build-full/graphviz-$(GRAPHVIZ_VERSION): build-full/%: sources/%.tar.gz
+$(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION): $(DEPS_FOLDER)/%: sources/%.tar.gz
 	mkdir -p $@
 	tar -zxf $< --strip-components 1 -C $@
 
@@ -218,15 +234,15 @@ test: lint test-deno test-node test-ts-integration
 lint: lint-ts lint-test
 
 .PHONY: lint-ts
-lint-ts:
+lint-ts: | node_modules/eslint
 	$(ESLINT) src --ext .ts
 
-.PHONY: lint-test
-lint-test:
+.PHONY: lint-test/eslint
+lint-test: | node_modules/eslint
 	$(ESLINT) test
 
 .PHONY: test-node
-test-node: all
+test-node: | $(DIST_FILES) node_modules/mocha
 ifdef REPORTER
 	$(MOCHA) test --reporter=$(REPORTER)
 else
@@ -234,7 +250,7 @@ else
 endif
 
 .PHONY: test-ts-integration
-test-ts-integration: pack
+test-ts-integration: sources/viz.js-v$(VIZ_VERSION).tar.gz | $(YARN_PATH) node_modules/typescript
 	$(eval TMP := $(shell mktemp -d))
 	mkdir -p $(TMP)/$@
 	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
