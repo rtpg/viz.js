@@ -1,4 +1,4 @@
-import { assertStringContains, unreachable } from "std::testing";
+import { assertStringIncludes, unreachable } from "std::testing";
 
 /// @deno-types="@aduh95/viz.js/types"
 import Viz from "@aduh95/viz.js";
@@ -9,7 +9,7 @@ Deno.test({
   async fn(): Promise<any> {
     const viz = await getViz();
     const svg = await viz.renderString("digraph { a -> b; }");
-    assertStringContains(svg, "</svg>");
+    assertStringIncludes(svg, "</svg>");
     viz.terminateWorker();
   },
 });
@@ -31,7 +31,7 @@ Deno.test({
 
         return viz.renderString(dot + "}");
       })
-      .then((svg: string) => assertStringContains(svg, "</svg>"))
+      .then((svg: string) => assertStringIncludes(svg, "</svg>"))
       .catch(unreachable)
       .finally(() => viz.terminateWorker());
   },
