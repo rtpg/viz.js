@@ -91,6 +91,15 @@ npm-clean:
 maintainer-clean: | clean npm-clean
 	$(RM) -r build $(DEPS_FOLDER) $(PREFIX_FULL)
 
+ifdef USE_TARBALL
+$(DIST_FILES) $(DEPS_FOLDER): unpack
+	$(warning Build is disabled when using tarball)
+
+.PHONY: unpack
+unpack: .unpack-stamp
+.unpack-stamp:
+	tar -xzf $(USE_TARBALL) --strip-components 1
+else
 $(DEPS_FOLDER):
 	$(error You must run `make deps` first.)
 
@@ -102,8 +111,6 @@ async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
-build/viz_wrapper.js build/worker.js build/index.js build/render_async.js build/render_sync.js: build/%.js: src/%.ts node_modules/typescript | build
-	$(TSC) $(TS_FLAGS) --outDir $(@D) -m es2020 --target esnext $<
 
 dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts: dist/%.d.ts: src/%.ts node_modules/typescript | dist
 	$(TSC) $(TS_FLAGS) --outDir $(@D) -d --emitDeclarationOnly $<
@@ -111,15 +118,38 @@ dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts: dist/%.d.ts: src/%
 dist/types.d.ts: src/types.d.ts | dist
 	cp $< $@
 
-test/deno-files/index.d.ts: dist/index.d.ts
-	sed '\,^///, d;/as NodeJSWorker/ d;s#"./types";#"../../dist/types.d.ts";#' $< > $@
-	echo "declare type NodeJSWorker=never;" >> $@
-
 dist/index.mjs: build/index.js node_modules/terser | dist
 	$(TERSER) --module $< > $@
 
 dist/index.cjs: src/index.cjs node_modules/terser | dist
 	$(TERSER) --toplevel $< > $@
+
+dist/render.browser.js: DEFINES=\
+		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_NODE=false \
+		-d ENVIRONMENT_IS_WEB=true -d ENVIRONMENT_IS_WORKER=true \
+
+dist/render.node.mjs: DEFINES=\
+		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_NODE=true \
+		-d ENVIRONMENT_IS_WEB=false -d ENVIRONMENT_IS_WORKER=false \
+
+dist/render.browser.js dist/render.node.mjs: dist/%: build/% node_modules/terser | dist
+	$(TERSER) --module $(DEFINES) $<> $@
+
+dist/render.wasm: build/render.wasm | dist
+	cp $< $@
+
+dist/render_async.js: build/render_async.js node_modules/terser | dist
+	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
+dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js node_modules/rollup node_modules/terser | dist
+	$(ROLLUP) -f commonjs --exports default $< | $(TERSER) --toplevel > $@
+endif
+
+build/viz_wrapper.js build/worker.js build/index.js build/render_async.js build/render_sync.js: build/%.js: src/%.ts node_modules/typescript | build
+	$(TSC) $(TS_FLAGS) --outDir $(@D) -m es2020 --target esnext $<
+
+test/deno-files/index.d.ts: dist/index.d.ts
+	sed '\,^///, d;/as NodeJSWorker/ d;s#"./types";#"../../dist/types.d.ts";#' $< > $@
+	echo "declare type NodeJSWorker=never;" >> $@
 
 build/asm: build/asm.js
 	# Creates an ES2015 module from emcc asm.js
@@ -151,17 +181,6 @@ build/node/render: build/node/render.mjs | build/node
 build/render.node.mjs: src/nodejs-module-interop.mjs build/render.node.js
 	cat $^ > $@
 
-dist/render.browser.js: DEFINES=\
-		-d ENVIRONMENT_HAS_NODE=false -d ENVIRONMENT_IS_NODE=false \
-		-d ENVIRONMENT_IS_WEB=true -d ENVIRONMENT_IS_WORKER=true \
-
-dist/render.node.mjs: DEFINES=\
-		-d ENVIRONMENT_HAS_NODE=true -d ENVIRONMENT_IS_NODE=true \
-		-d ENVIRONMENT_IS_WEB=false -d ENVIRONMENT_IS_WORKER=false \
-
-dist/render.browser.js dist/render.node.mjs: dist/%: build/% node_modules/terser | dist
-	$(TERSER) --module $(DEFINES) $<> $@
-
 build/render.wasm: build/browser/render.wasm build/node/render.wasm
 	@cmp $^ || (\
 		echo "WASM files differ" && false \
@@ -171,9 +190,6 @@ build/render.wasm: build/browser/render.wasm build/node/render.wasm
 build/browser/render.wasm build/node/render.wasm: build/%/render.wasm: build/%/render.mjs
 	[ -f '$@' ] || ($(RM) $^ && $(MAKE) $@)
 	touch $@
-
-dist/render.wasm: build/render.wasm | dist
-	cp $< $@
 
 build/render.o: src/viz.cpp | build
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
@@ -187,11 +203,6 @@ build/browser/render.mjs: ENVIRONMENT:=worker
 build/node/render.mjs build/browser/render.mjs build/asm.js: build/render.o
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(LINK_FLAGS) -s ENVIRONMENT=$(ENVIRONMENT) -Oz -o $@ $< $(LINK_INCLUDES)
-
-dist/render_async.js: build/render_async.js node_modules/terser | dist
-	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
-dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js node_modules/rollup node_modules/terser | dist
-	$(ROLLUP) -f commonjs --exports default $< | $(TERSER) --toplevel > $@
 
 async build build/node build/browser dist $(PREFIX_FULL) sync:
 	mkdir -p $@
