@@ -12,8 +12,5 @@ onmessage = function (m) {
     wasmBinary,
   })
     .then(() => o(m))
-    .catch(console.error)
-    .finally(() => {
-      self.close();
-    });
+    .catch(console.error);
 };
