@@ -34,7 +34,7 @@ jobs:
           path: ${{env.EM_CACHE_FOLDER}}
           key: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}-${{ runner.os }}
       - name: Setup emsdk (use cache if found, create otherwise)
-        uses: mymindstorm/setup-emsdk@v6
+        uses: mymindstorm/setup-emsdk@v7
         with:
           version: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
