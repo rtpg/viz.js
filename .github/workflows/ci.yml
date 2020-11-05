@@ -17,6 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Cache npm dependencies
+        id: cache-npm-libraries
+        uses: actions/cache@v2
+        with:
+          path: .yarn/cache/*
+          key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
       - run: sudo apt update
       - name: Install utilities
         run:
@@ -44,12 +50,6 @@ jobs:
         with:
           version: ${{ steps.makefile-decipher.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-      - name: Cache npm dependencies
-        id: cache-npm-libraries
-        uses: actions/cache@v2
-        with:
-          path: .yarn/cache/*
-          key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
       - name: Download and build dependencies
         if: steps.cache-system-libraries.outputs.cache-hit != 'true'
         run: make deps -j
@@ -81,6 +81,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Cache npm dependencies
+        id: cache-npm-libraries
+        uses: actions/cache@v2
+        with:
+          path: .yarn/cache/*
+          key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
       - name: Download tarball from build job
         uses: actions/download-artifact@v2
         with:
@@ -89,12 +95,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - name: Cache npm dependencies
-        id: cache-npm-libraries
-        uses: actions/cache@v2
-        with:
-          path: .yarn/cache/*
-          key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
       - name: Run tests
         run: make test-node -j
         env:
