@@ -1,9 +1,11 @@
 # Changelog
 
-### _unreleased_
+### @aduh95/Viz.js v3.2.1 (2020-11-05)
 
 - Bump Emscripten version to
   [2.0.8](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#208-10242020).
+- Closure compiler is now disabled when building `render_sync.js`
+  ([#14](https://github.com/aduh95/viz.js/issues/14)).
 
 ### @aduh95/Viz.js v3.2.0 (2020-10-17)
 
