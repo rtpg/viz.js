@@ -27,11 +27,15 @@ jobs:
           echo "##[set-output name=EMSCRIPTEN_VERSION;]$(awk '{if($1
           =="EMSCRIPTEN_VERSION")print $3}' Makefile)"
         id: emsdk
-      - name: Cache emsdk
+      - name: Cache emsdk and npm dependencies
         id: cache-system-libraries
         uses: actions/cache@v2
         with:
-          path: ${{env.EM_CACHE_FOLDER}}
+          path: |
+            ${{env.EM_CACHE_FOLDER}}
+            .yarn/cache/*
+            build-deps/**
+            prefix-full/**
           key: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}-${{ runner.os }}
       - name: Setup emsdk (use cache if found, create otherwise)
         uses: mymindstorm/setup-emsdk@v7
@@ -39,6 +43,7 @@ jobs:
           version: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
       - name: Download and build dependencies
+        if: steps.cache-system-libraries.outputs.cache-hit != 'true'
         run: make deps -j
         env:
           RUNNER_TEMP: /tmp
@@ -76,6 +81,12 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      - name: Cache npm dependencies
+        id: cache-system-libraries
+        uses: actions/cache@v2
+        with:
+          path: .yarn/cache/*
+          key: ${{ steps.emsdk.outputs.EMSCRIPTEN_VERSION }}-${{ runner.os }}
       - name: Run tests
         run: make test-node -j
         env:
