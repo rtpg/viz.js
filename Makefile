@@ -204,7 +204,7 @@ build/asm: build/asm.js
 		echo ";export default Module" | cat $< -\
 	) > $@
 
-async build build/node build/browser dist $(PREFIX_FULL) sync:
+async build build/node build/browser dist $(PREFIX_FULL) sources sync:
 	mkdir -p $@
 
 .PHONY: expat–full
@@ -290,7 +290,7 @@ endif
 
 .PHONY: pack
 pack: sources/viz.js-v$(VIZ_VERSION).tar.gz
-sources/viz.js-v$(VIZ_VERSION).tar.gz: $(DIST_FILES) | $(YARN_PATH)
+sources/viz.js-v$(VIZ_VERSION).tar.gz: $(DIST_FILES) | $(YARN_PATH) sources
 	$(YARN) pack -o $@
 
 .PHONY: publish
