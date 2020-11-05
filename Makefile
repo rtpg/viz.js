@@ -151,16 +151,6 @@ test/deno-files/index.d.ts: dist/index.d.ts
 	sed '\,^///, d;/as NodeJSWorker/ d;s#"./types";#"../../dist/types.d.ts";#' $< > $@
 	echo "declare type NodeJSWorker=never;" >> $@
 
-build/asm: build/asm.js
-	# Creates an ES2015 module from emcc asm.js
-	# Don't use any extension to match TS resolution
-ifeq ($(USE_CLOSURE), 0)
-	echo ";export default Module" |\
-	cat $^ - > $@
-else
-	sed -e 's/(module.exports[[:space:]]*=/false;export default(/' $< > $@
-endif
-
 build/browser/worker.js build/browser/viz_wrapper.js: build/browser/%.js: build/%.js | build/browser
 	cp $< $@
 build/node/worker.js build/node/viz_wrapper.js: build/node/%.js: build/%.js | build/node
@@ -204,6 +194,15 @@ build/browser/render.mjs: ENVIRONMENT:=worker
 build/node/render.mjs build/browser/render.mjs build/asm.js: build/render.o
 	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
 	$(CC) $(LINK_FLAGS) -s ENVIRONMENT=$(ENVIRONMENT) -Oz -o $@ $< $(LINK_INCLUDES)
+
+build/asm: CJS2ESM:= 's/(module.exports[[:space:]]*=/false;export default(/'
+build/asm: build/asm.js
+	# Creates an ES2015 module from emcc asm.js
+	# Don't use any extension to match TS resolution
+	$(if $(subst 0,,$(USE_CLOSURE)), \
+		sed -e $(CJS2ESM) $<, \
+		echo ";export default Module" | cat $< -\
+	) > $@
 
 async build build/node build/browser dist $(PREFIX_FULL) sync:
 	mkdir -p $@
