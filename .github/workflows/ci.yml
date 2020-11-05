@@ -59,17 +59,18 @@ jobs:
       - name: Build and pack Viz.js
         run: make pack -j
         env:
-          VIZ_VERSION: unreleased-${{ github.sha }}
+          VIZ_VERSION: unreleased+${{ github.sha }}
       - name: Run tests
         run: make test -j
         env:
           DENO:
+          VIZ_VERSION: unreleased+${{ github.sha }}
       - name: Upload artifact if tests are green
         if: success()
         uses: actions/upload-artifact@v1
         with:
-          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
-          path: sources/viz.js-vunreleased-${{ github.sha }}.tar.gz
+          name: viz.js-vunreleased+${{ github.sha }}.tar.gz
+          path: sources/viz.js-vunreleased+${{ github.sha }}.tar.gz
 
   test-node:
     needs: build
@@ -90,7 +91,7 @@ jobs:
       - name: Download tarball from build job
         uses: actions/download-artifact@v2
         with:
-          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
+          name: viz.js-vunreleased+${{ github.sha }}.tar.gz
       - name: Install Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
@@ -98,7 +99,7 @@ jobs:
       - name: Run tests
         run: make test-node -j
         env:
-          USE_TARBALL: viz.js-vunreleased-${{ github.sha }}.tar.gz
+          USE_TARBALL: viz.js-vunreleased+${{ github.sha }}.tar.gz
 
   test-node-legacy:
     needs: build
@@ -113,7 +114,7 @@ jobs:
       - name: Download tarball from build job
         uses: actions/download-artifact@v2
         with:
-          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
+          name: viz.js-vunreleased+${{ github.sha }}.tar.gz
       - name: Install Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         env:
@@ -122,7 +123,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Prepare tests
         run:
-          rm package.json && npm i mocha && npm i viz.js-vunreleased-${{
+          rm package.json && npm i mocha && npm i viz.js-vunreleased+${{
           github.sha }}.tar.gz
       - name: Run tests
         run:
@@ -142,7 +143,7 @@ jobs:
       - name: Download tarball from build job
         uses: actions/download-artifact@v2
         with:
-          name: viz.js-vunreleased-${{ github.sha }}.tar.gz
+          name: viz.js-vunreleased+${{ github.sha }}.tar.gz
       - name: Install Deno ${{ matrix.deno }}
         run:
           curl -fsSL https://deno.land/x/install/install.sh | sudo
@@ -150,4 +151,4 @@ jobs:
       - name: Run tests
         run: make test-deno -j
         env:
-          USE_TARBALL: viz.js-vunreleased-${{ github.sha }}.tar.gz
+          USE_TARBALL: viz.js-vunreleased+${{ github.sha }}.tar.gz
