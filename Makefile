@@ -9,8 +9,8 @@ EXPAT_VERSION = 2.2.9
 GRAPHVIZ_VERSION = 2.44.1
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
-EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.gz"
-GRAPHVIZ_SOURCE_URL = "https://www2.graphviz.org/Packages/stable/portable_source/graphviz-$(GRAPHVIZ_VERSION).tar.gz"
+EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.bz2"
+GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/$(GRAPHVIZ_VERSION)/graphviz-$(GRAPHVIZ_VERSION).tar.bz2"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
 USE_CLOSURE ?= 1
@@ -229,14 +229,14 @@ graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	cd $</plugin && $(EMMAKE) $(MAKE) --quiet install
 
 
-$(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION): $(DEPS_FOLDER)/%: sources/%.tar.gz
+$(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION): $(DEPS_FOLDER)/%: sources/%.tar.bz2
 	mkdir -p $@
-	tar -zxf $< --strip-components 1 -C $@
+	tar -xjf $< --strip-components 1 -C $@
 
 $(YARN_PATH): SOURCE=$(YARN_SOURCE_URL)
-sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz: SOURCE=$(GRAPHVIZ_SOURCE_URL)
-sources/expat-$(EXPAT_VERSION).tar.gz: SOURCE=$(EXPAT_SOURCE_URL)
-sources/expat-$(EXPAT_VERSION).tar.gz sources/graphviz-$(GRAPHVIZ_VERSION).tar.gz $(YARN_PATH):
+sources/graphviz-$(GRAPHVIZ_VERSION).tar.bz2: SOURCE=$(GRAPHVIZ_SOURCE_URL)
+sources/expat-$(EXPAT_VERSION).tar.bz2: SOURCE=$(EXPAT_SOURCE_URL)
+sources/expat-$(EXPAT_VERSION).tar.bz2 sources/graphviz-$(GRAPHVIZ_VERSION).tar.bz2 $(YARN_PATH):
 	curl --fail --create-dirs --location $(SOURCE) -o $@
 
 .PHONY: test
