@@ -4,6 +4,8 @@
 
 - Bump Emscripten version to
   [2.0.12](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#2012-01092021).
+- Bump Expat version to
+  [2.2.10](https://github.com/libexpat/libexpat/blob/R_2_2_10/expat/Changes).
 - Bump Graphviz version to
   [2.46.0](https://gitlab.com/graphviz/graphviz/-/blob/master/CHANGELOG.md#2460-2021-01-18).
 
