@@ -4,6 +4,8 @@
 
 - Bump Emscripten version to
   [2.0.12](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#2012-01092021).
+- Bump Graphviz version to
+  [2.46.0](https://gitlab.com/graphviz/graphviz/-/blob/master/CHANGELOG.md#2460-2021-01-18).
 
 ### @aduh95/Viz.js v3.2.1 (2020-11-05)
 

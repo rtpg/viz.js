@@ -128,7 +128,7 @@ describe("Test graph rendering using web browser", function () {
 
     await assert.rejects(
       page.evaluate(
-        (viz) => viz.renderString('digraph {\n a -> b [label="erroneous]\n}'),
+        (viz) => viz.renderString('digraph { a -> b [label="erroneous]\n}'),
         viz
       ),
       /syntax error in line 2/

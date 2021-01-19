@@ -6,7 +6,7 @@ NODE ?= node
 
 EMSCRIPTEN_VERSION = 2.0.12
 EXPAT_VERSION = 2.2.9
-GRAPHVIZ_VERSION = 2.44.1
+GRAPHVIZ_VERSION = 2.46.0
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.bz2"
@@ -215,7 +215,8 @@ expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL)
 
 .PHONY: graphviz-full
 graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
-	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
+	grep $(GRAPHVIZ_VERSION) $</gen_version.py
+	cd $< && ./autogen.sh
 	cd $< && ./configure --quiet
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
 	[ `uname` != 'Darwin' ] || [ -f $</configure.ac.old ] || (\

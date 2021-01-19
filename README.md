@@ -254,7 +254,7 @@ You'll also need [Node.js 13+](https://nodejs.org/) and
 Using Homebrew (macOS or GNU/Linux):
 
 ```shell
-brew install node automake libtool pkg-config
+brew install automake bison libtool node pkg-config
 ```
 
 > Note: Emscripten version number is pinned in the Makefile. If you are willing
