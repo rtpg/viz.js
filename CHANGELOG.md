@@ -1,6 +1,6 @@
 # Changelog
 
-### _unreleased_
+### @aduh95/Viz.js v3.3.1 (2021-02-17)
 
 - Fix image support in `@aduh95/viz.js/sync`
   ([#16](https://github.com/aduh95/viz.js/issues/16)).
