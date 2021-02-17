@@ -4,6 +4,8 @@
 
 - Fix image support in `@aduh95/viz.js/sync`
   ([#16](https://github.com/aduh95/viz.js/issues/16)).
+- Bump Emscripten version to
+  [2.0.14](https://github.com/emscripten-core/emscripten/blob/master/ChangeLog.md#2014-02142021).
 
 ### @aduh95/Viz.js v3.3.0 (2021-01-19)
 
