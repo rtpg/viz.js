@@ -1,5 +1,10 @@
 # Changelog
 
+### _unreleased_
+
+- Fix `TextDecoder is not defined` in `@aduh95/viz.js/sync` on older version of
+  Node.js.
+
 ### @aduh95/Viz.js v3.3.1 (2021-02-17)
 
 - Fix image support in `@aduh95/viz.js/sync`
