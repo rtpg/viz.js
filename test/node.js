@@ -63,4 +63,16 @@ describe("Test graph rendering using Node.js", function () {
       .then((result) => assert.strictEqual(result, resultSync))
       .finally(() => viz.terminateWorker());
   });
+
+  it('can reference images by URL in the sync version if dimensions are specified using the "images" option', async function () {
+    const renderStringSync = require("@aduh95/viz.js/sync");
+
+    assert.ok(
+      renderStringSync('digraph { a[image="http://example.com/test.png"]; }', {
+        images: [
+          { path: "http://example.com/test.png", width: 400, height: 300 },
+        ],
+      })
+    );
+  });
 });

@@ -11,15 +11,29 @@ import type { RenderOptions } from "./types";
  */
 export default function renderStringSync(
   src: string,
-  options?: RenderOptions
+  {
+    format = "svg",
+    engine = "dot",
+    files = [],
+    images = [],
+    yInvert = false,
+    nop = 0,
+  }: RenderOptions = {}
 ): string {
+  for (const { path, width, height } of images) {
+    files.push({
+      path,
+      data:
+        '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
+        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
+        `<svg width="${width}" height="${height}"></svg>`,
+    });
+  }
   return render(Module, src, {
-    format: "svg",
-    engine: "dot",
-    files: [],
-    images: [],
-    yInvert: false,
-    nop: 0,
-    ...(options || {}),
+    format,
+    engine,
+    files,
+    yInvert,
+    nop,
   });
 }
