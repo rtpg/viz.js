@@ -122,10 +122,12 @@ jobs:
       - name: Prepare tests
         run:
           rm package.json && npm i mocha && npm i viz.js-vunreleased+${{
-          github.sha }}.tar.gz
-      - name: Run tests
+          github.sha }}.tar.gz && echo 'const assert=require("assert");' >
+          test/node.cjs && awk '/^describe\(/{o=1} { if (o==1) { print } }'
+          test/node.js >> test/node.cjs
+      - name: Run CJS tests
         run:
-          node ./node_modules/.bin/mocha test/node.js -f "should render a graph
+          node ./node_modules/.bin/mocha test/node.cjs -f "should render a graph
           using sync version"
 
   test-deno:

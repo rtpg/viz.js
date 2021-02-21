@@ -104,7 +104,7 @@ $(DEPS_FOLDER):
 	$(error You must run `make deps` first.)
 
 async/index.js sync/index.js: %/index.js: | %
-	echo "module.exports=require('../dist/render_$(@D).js')" > $@
+	echo "module.exports=require('../dist/render_$(@D).cjs')" > $@
 async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
 	echo "export {default} from '../dist/render_$(@D)'" > $@
 
@@ -138,9 +138,9 @@ dist/render.browser.js dist/render.node.mjs: dist/%: build/% node_modules/terser
 dist/render.wasm: build/render.wasm | dist
 	cp $< $@
 
-dist/render_async.js: build/render_async.js node_modules/terser | dist
+dist/render_async.cjs: build/render_async.js node_modules/terser | dist
 	sed 's/export default/module.exports=/' $< | $(TERSER) --toplevel > $@
-dist/render_sync.js: build/render_sync.js build/asm build/viz_wrapper.js node_modules/rollup node_modules/terser | dist
+dist/render_sync.cjs: build/render_sync.js build/asm build/viz_wrapper.js node_modules/rollup node_modules/terser | dist
 	$(ROLLUP) -f commonjs --exports default $< | $(TERSER) --toplevel > $@
 endif
 

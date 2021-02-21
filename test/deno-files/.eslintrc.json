@@ -1,7 +1,4 @@
 {
   "env": { "browser": true, "node": false, "mocha": false },
-  "ignorePatterns": ["render.wasm.arraybuffer.js"],
-  "parserOptions": {
-    "sourceType": "module"
-  }
+  "ignorePatterns": ["render.wasm.arraybuffer.js"]
 }

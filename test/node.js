@@ -1,4 +1,7 @@
-const assert = require("assert");
+import assert from "assert";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 async function getViz() {
   const worker = await import("@aduh95/viz.js/worker").then((module) =>

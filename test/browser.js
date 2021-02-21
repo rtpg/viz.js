@@ -1,8 +1,8 @@
 /* globals getViz, parseSVG */
 /* eslint-env browser, es6 */
 
-const assert = require("assert");
-const puppeteer = require("puppeteer");
+import assert from "assert";
+import puppeteer from "puppeteer";
 
 const args = puppeteer.defaultArgs();
 args[args.findIndex((flag) => /enable-features/.test(flag))] +=
