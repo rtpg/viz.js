@@ -15,8 +15,8 @@
     "./sync": "./dist/render_sync.cjs",
     "./wasm": "./dist/render.wasm",
     "./worker": {
-      "import": "./dist/render.node.mjs",
-      "browser": "./dist/render.browser.js"
+      "node": "./dist/render.node.mjs",
+      "default": "./dist/render.browser.js"
     }
   },
   "type": "module",

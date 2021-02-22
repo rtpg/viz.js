@@ -112,10 +112,16 @@ import initWASM from "@aduh95/viz.js/worker";
 // If you are not using a bundler that supports package.json#exports
 // use "./node_modules/@aduh95/viz.js/dist/render.browser.js" instead.
 
-import wasmURL from "file-loader!@aduh95/viz.js/wasm";
+// You need to configure your bundler to treat `.wasm` file as file to return a URL.
+import wasmURL from "@aduh95/viz.js/wasm";
+// With Rollup, use the `@rollup/plugin-url` plugin and add `**/*.wasm` to the
+// `include` list in the plugin config.
+// With Webpack, use the `file-loader` plugin: "file-loader!@aduh95/viz.js/wasm"
+
 // If you are not using a bundler that supports package.json#exports
-// Or doesn't have a file-loader plugin to get URL of the asset,
-// use "./node_modules/@aduh95/viz.js/dist/render.wasm" instead.
+// or doesn't have a file-loader plugin to get URL of the asset:
+// const wasmURL =
+//   new URL("./node_modules/@aduh95/viz.js/dist/render.wasm", import.meta.url);
 
 initWASM({
   locateFile() {
@@ -129,15 +135,24 @@ And give feed that module to the main thread:
 ```js
 //main.js
 import Viz from "@aduh95/viz.js";
-// If you are not using a bundler that supports package.json#exports
-// use "./node_modules/@aduh95/viz.js/dist/index.mjs" instead.
+// If you are not using a bundler that supports package.json#exports:
+// import Viz from "./node_modules/@aduh95/viz.js/dist/index.mjs";
 
-import VizWorker from "worker-loader!./worker.js";
+// If you are using Rollup, use `@surma/rollup-plugin-off-main-thread` plugin.
+// If you are using Webpack, use the `worker-loader` plugin and add this import:
+// import VizWorker from "worker-loader!./worker.js";
 
 let viz;
 async function dot2svg(dot, options) {
   if (viz === undefined) {
-    viz = new Viz({ worker: new VizWorker() });
+    // No-bundler / auto-bundling version:
+    viz = new Viz({
+      worker: new Worker(new URL("./worker.js", import.meta.url), {
+        type: "module",
+      }),
+    });
+    // or if you are using Webpack:
+    // viz = new Viz({ worker: new VizWorker() });
   }
   return viz.renderString(dot, options);
 }
