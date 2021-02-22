@@ -1,5 +1,10 @@
 # Changelog
 
+### @aduh95/Viz.js v3.3.3 (2021-02-22)
+
+- Improve interoperability with web bundlers
+  ([#19](https://github.com/aduh95/viz.js/pull/19)).
+
 ### @aduh95/Viz.js v3.3.2 (2021-02-17)
 
 - Fix `TextDecoder is not defined` in `@aduh95/viz.js/sync` on older version of
