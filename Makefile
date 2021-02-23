@@ -6,11 +6,11 @@ NODE ?= node
 
 EMSCRIPTEN_VERSION = 2.0.14
 EXPAT_VERSION = 2.2.10
-GRAPHVIZ_VERSION = 2.46.0
+GRAPHVIZ_VERSION = 2.46.1
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
-EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.bz2"
-GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/archive/$(GRAPHVIZ_VERSION)/graphviz-$(GRAPHVIZ_VERSION).tar.bz2"
+EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.xz"
+GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/package_files/7097037/download"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
 USE_CLOSURE ?= 1
@@ -215,8 +215,7 @@ expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL)
 
 .PHONY: graphviz-full
 graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
-	grep $(GRAPHVIZ_VERSION) $</gen_version.py
-	cd $< && ./autogen.sh
+	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
 	cd $< && ./configure --quiet
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
 	[ `uname` != 'Darwin' ] || [ -f $</configure.ac.old ] || (\
@@ -230,14 +229,14 @@ graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
 	cd $</plugin && $(EMMAKE) $(MAKE) --quiet install
 
 
-$(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION): $(DEPS_FOLDER)/%: sources/%.tar.bz2
+$(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION): $(DEPS_FOLDER)/%: sources/%.tar.xz
 	mkdir -p $@
-	tar -xjf $< --strip-components 1 -C $@
+	tar -xJf $< --strip-components 1 -C $@
 
 $(YARN_PATH): SOURCE=$(YARN_SOURCE_URL)
-sources/graphviz-$(GRAPHVIZ_VERSION).tar.bz2: SOURCE=$(GRAPHVIZ_SOURCE_URL)
-sources/expat-$(EXPAT_VERSION).tar.bz2: SOURCE=$(EXPAT_SOURCE_URL)
-sources/expat-$(EXPAT_VERSION).tar.bz2 sources/graphviz-$(GRAPHVIZ_VERSION).tar.bz2 $(YARN_PATH):
+sources/graphviz-$(GRAPHVIZ_VERSION).tar.xz: SOURCE=$(GRAPHVIZ_SOURCE_URL)
+sources/expat-$(EXPAT_VERSION).tar.xz: SOURCE=$(EXPAT_SOURCE_URL)
+sources/expat-$(EXPAT_VERSION).tar.xz sources/graphviz-$(GRAPHVIZ_VERSION).tar.xz $(YARN_PATH):
 	curl --fail --create-dirs --location $(SOURCE) -o $@
 
 .PHONY: test
