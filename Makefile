@@ -103,6 +103,9 @@ else
 $(DEPS_FOLDER):
 	$(error You must run `make deps` first.)
 
+$(DEPS_FOLDER)/package.json:
+	echo '{ "type": "commonjs" }' > $@
+
 async/index.js sync/index.js: %/index.js: | %
 	echo "module.exports=require('../dist/render_$(@D).cjs')" > $@
 async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
@@ -208,13 +211,13 @@ async build build/node build/browser dist $(PREFIX_FULL) sources sync:
 	mkdir -p $@
 
 .PHONY: expat–full
-expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL)
+expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
 	grep $(EXPAT_VERSION) $</expat_config.h
 	cd $< && $(EMCONFIGURE) ./configure --quiet --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
 	cd $< && $(EMMAKE) $(MAKE) --quiet -C lib all install
 
 .PHONY: graphviz-full
-graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL)
+graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
 	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
 	cd $< && ./configure --quiet
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
