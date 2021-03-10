@@ -1,6 +1,6 @@
 # Changelog
 
-### _unreleased_
+### @aduh95/Viz.js v3.3.4 (2021-03-10)
 
 - Bump Graphviz version to
   [2.46.1](https://gitlab.com/graphviz/graphviz/-/blob/master/CHANGELOG.md#2461-2021-02-13).
