@@ -6,11 +6,11 @@ NODE ?= node
 
 EMSCRIPTEN_VERSION = 2.0.15
 EXPAT_VERSION = 2.2.10
-GRAPHVIZ_VERSION = 2.46.1
+GRAPHVIZ_VERSION = 2.47.0
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.xz"
-GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/package_files/7097037/download"
+GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/package_files/8183717/download"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
 USE_CLOSURE ?= 1
