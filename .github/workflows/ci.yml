@@ -50,16 +50,16 @@ jobs:
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
       - name: Download and build dependencies
         if: steps.cache-system-libraries.outputs.cache-hit != 'true'
-        run: make deps -j
+        run: emmake make deps -j
         env:
           RUNNER_TEMP: /tmp
           CI: true
       - name: Build and pack Viz.js
-        run: make pack -j
+        run: emmake make pack -j
         env:
           VIZ_VERSION: unreleased+${{ github.sha }}
       - name: Run tests
-        run: make test -j
+        run: emmake make test -j
         env:
           DENO:
           VIZ_VERSION: unreleased+${{ github.sha }}
@@ -95,7 +95,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Run tests
-        run: make test-node -j
+        run: emmake make test-node -j
         env:
           USE_TARBALL: viz.js-vunreleased+${{ github.sha }}.tar.gz
 
@@ -149,6 +149,6 @@ jobs:
           curl -fsSL https://deno.land/x/install/install.sh | sudo
           DENO_INSTALL=/usr/local sh -s ${{ matrix.deno }}
       - name: Run tests
-        run: make test-deno -j
+        run: emmake make test-deno -j
         env:
           USE_TARBALL: viz.js-vunreleased+${{ github.sha }}.tar.gz

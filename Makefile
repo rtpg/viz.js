@@ -16,9 +16,6 @@ YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cl
 USE_CLOSURE ?= 1
 
 EMCONFIGURE ?= emconfigure
-EMMAKE ?= emmake
-EMCC ?= emcc
-CC = $(EMCC)
 CC_FLAGS = -c
 CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz
 LINK_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=$(USE_CLOSURE) --closure $(USE_CLOSURE) -g1
@@ -101,7 +98,7 @@ unpack: .unpack-stamp
 	tar -xzf $(USE_TARBALL) --strip-components 1
 else
 $(DEPS_FOLDER):
-	$(error You must run `make deps` first.)
+	$(error You must run `emmake make deps` first.)
 
 $(DEPS_FOLDER)/package.json:
 	echo '{ "type": "commonjs" }' > $@
@@ -214,7 +211,7 @@ async build build/node build/browser dist $(PREFIX_FULL) sources sync:
 expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
 	grep $(EXPAT_VERSION) $</expat_config.h
 	cd $< && $(EMCONFIGURE) ./configure --quiet --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
-	cd $< && $(EMMAKE) $(MAKE) --quiet -C lib all install
+	cd $< && $(MAKE) --quiet -C lib all install
 
 .PHONY: graphviz-full
 graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
@@ -227,9 +224,9 @@ graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL) $(DE
 		true \
 	)
 	cd $< && $(EMCONFIGURE) ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
-	cd $< && $(EMMAKE) $(MAKE) --quiet lib plugin
-	cd $</lib && $(EMMAKE) $(MAKE) --quiet install
-	cd $</plugin && $(EMMAKE) $(MAKE) --quiet install
+	cd $< && $(MAKE) --quiet lib plugin
+	cd $</lib && $(MAKE) --quiet install
+	cd $</plugin && $(MAKE) --quiet install
 
 
 $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION): $(DEPS_FOLDER)/%: sources/%.tar.xz

@@ -282,6 +282,6 @@ where it should find each binary.
 The build process for Viz.js is split into two parts: building the Graphviz and
 Expat dependencies, and building the rendering script files and API.
 
-    make deps
-    make all -j4
-    make test
+    emmake make deps
+    emmake make all -j4
+    emmake make test
