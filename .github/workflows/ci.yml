@@ -95,7 +95,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Run tests
-        run: emmake make test-node -j
+        run: make test-node -j
         env:
           USE_TARBALL: viz.js-vunreleased+${{ github.sha }}.tar.gz
 
@@ -149,6 +149,6 @@ jobs:
           curl -fsSL https://deno.land/x/install/install.sh | sudo
           DENO_INSTALL=/usr/local sh -s ${{ matrix.deno }}
       - name: Run tests
-        run: emmake make test-deno -j
+        run: make test-deno -j
         env:
           USE_TARBALL: viz.js-vunreleased+${{ github.sha }}.tar.gz
