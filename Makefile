@@ -4,13 +4,13 @@ PREFIX_FULL = $(abspath ./prefix-full)
 
 NODE ?= node
 
-EMSCRIPTEN_VERSION = 2.0.15
-EXPAT_VERSION = 2.2.10
-GRAPHVIZ_VERSION = 2.47.0
+EMSCRIPTEN_VERSION = 2.0.25
+EXPAT_VERSION = 2.4.1
+GRAPHVIZ_VERSION = 2.47.3
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.xz"
-GRAPHVIZ_SOURCE_URL = "https://gitlab.com/graphviz/graphviz/-/package_files/8183717/download"
+GRAPHVIZ_SOURCE_URL = "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/$(GRAPHVIZ_VERSION)/graphviz-$(GRAPHVIZ_VERSION).tar.xz"
 YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
 USE_CLOSURE ?= 1
@@ -209,20 +209,15 @@ async build build/node build/browser dist $(PREFIX_FULL) sources sync:
 
 .PHONY: expat–full
 expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
-	grep $(EXPAT_VERSION) $</expat_config.h
+	grep -q $(EXPAT_VERSION) $</expat_config.h
 	cd $< && $(EMCONFIGURE) ./configure --quiet --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
 	cd $< && $(MAKE) --quiet -C lib all install
 
 .PHONY: graphviz-full
 graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
-	grep $(GRAPHVIZ_VERSION) $</graphviz_version.h
+	grep -q $(GRAPHVIZ_VERSION) $</graphviz_version.h
 	cd $< && ./configure --quiet
 	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
-	[ `uname` != 'Darwin' ] || [ -f $</configure.ac.old ] || (\
-		cp $</configure.ac $</configure.ac.old && \
-		sed '/-headerpad_max_install_names/d;' $</configure.ac.old > $</configure.ac &&\
-		true \
-	)
 	cd $< && $(EMCONFIGURE) ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
 	cd $< && $(MAKE) --quiet lib plugin
 	cd $</lib && $(MAKE) --quiet install

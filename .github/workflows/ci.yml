@@ -50,7 +50,7 @@ jobs:
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
       - name: Download and build dependencies
         if: steps.cache-system-libraries.outputs.cache-hit != 'true'
-        run: emmake make deps -j
+        run: make deps -j
         env:
           RUNNER_TEMP: /tmp
           CI: true

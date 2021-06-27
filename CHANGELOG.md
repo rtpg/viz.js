@@ -1,5 +1,14 @@
 # Changelog
 
+### _unreleased_
+
+- Bump Emscripten version to
+  [2.0.25](https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#2025).
+- Bump Expat version to
+  [2.4.1](https://github.com/libexpat/libexpat/blob/R_2_4_1/expat/Changes).
+- Bump Graphviz version to
+  [2.47.3](https://gitlab.com/graphviz/graphviz/-/blob/main/CHANGELOG.md#2473-2021-06-19).
+
 ### @aduh95/Viz.js v3.4.0 (2021-03-16)
 
 - Bump Graphviz version to
