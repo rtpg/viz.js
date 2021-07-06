@@ -197,6 +197,7 @@ build/render.o: src/viz.cpp | build
 
 build/asm.js build/asm: USE_CLOSURE:=0
 build/asm.js: LINK_FLAGS+= -s WASM=0 -s WASM_ASYNC_COMPILATION=0 -s TEXTDECODER=1 --memory-init-file 0
+build/node/render.mjs: LINK_FLAGS+= -s USE_ES6_IMPORT_META=0
 build/browser/render.mjs: | build/browser
 build/node/render.mjs: | build/node
 build/asm.js build/node/render.mjs: ENVIRONMENT:=node
