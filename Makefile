@@ -182,7 +182,17 @@ build/browser/render.wasm build/node/render.wasm: build/%/render.wasm: build/%/r
 	touch $@
 
 build/render.o: src/viz.cpp | build
-	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
+	@$(CC) --version | grep $(EMSCRIPTEN_VERSION) || (\
+		echo "" && \
+		echo "" && \
+		echo "Required version of emcc not detected. Expected '$(EMSCRIPTEN_VERSION)', got:" && \
+		echo "" && \
+		$(CC) --version && \
+		echo "" && \
+		echo "\033[3mHint: make sure you are using use \033[0memmake make …\033[3m.\033[0m" && \
+		echo "Install version $(EMSCRIPTEN_VERSION), or override the EMSCRIPTEN_VERSION variable in the Makefile." && \
+		echo "Aborting." && false \
+	)
 	$(CC) $(CC_FLAGS) -o $@ $< $(CC_INCLUDES)
 
 build/asm.js build/asm: USE_CLOSURE:=0
@@ -192,7 +202,17 @@ build/node/render.mjs: | build/node
 build/asm.js build/node/render.mjs: ENVIRONMENT:=node
 build/browser/render.mjs: ENVIRONMENT:=worker
 build/node/render.mjs build/browser/render.mjs build/asm.js: build/render.o
-	$(CC) --version | grep $(EMSCRIPTEN_VERSION)
+	@$(CC) --version | grep $(EMSCRIPTEN_VERSION) || (\
+		echo "" && \
+		echo "" && \
+		echo "Required version of emcc not detected. Expected '$(EMSCRIPTEN_VERSION)', got:" && \
+		echo "" && \
+		$(CC) --version && \
+		echo "" && \
+		echo "\033[3mHint: make sure you are using use \033[0memmake make …\033[3m.\033[0m" && \
+		echo "Install version $(EMSCRIPTEN_VERSION), or override the EMSCRIPTEN_VERSION variable in the Makefile." && \
+		echo "Aborting." && false \
+	)
 	$(CC) $(LINK_FLAGS) -s ENVIRONMENT=$(ENVIRONMENT) -Oz -o $@ $< $(LINK_INCLUDES)
 
 build/asm: CJS2ESM:= 's/(module.exports[[:space:]]*=/false;export default(/'
