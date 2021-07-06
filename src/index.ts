@@ -56,6 +56,7 @@ class WorkerWrapper {
           const e = new Error(error.message);
           if (error.fileName) (e as any).fileName = error.fileName;
           if (error.lineNumber) (e as any).lineNumber = error.lineNumber;
+          if (error.stack) (e as any).stack = error.stack;
           return reject(e);
         }
         resolve(result);

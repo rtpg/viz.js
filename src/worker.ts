@@ -49,6 +49,7 @@ export function onmessage(event: MessageEvent): Promise<void> {
               message: e.message,
               fileName: (e as any).fileName,
               lineNumber: (e as any).lineNumber,
+              stack: (e as any).stack,
             }
           : { message: e.toString() };
 

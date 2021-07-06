@@ -2,6 +2,7 @@ export type SerializedError = {
   message: string;
   lineNumber?: number;
   fileName?: string;
+  stack?: string;
 };
 export type RenderRequestListener = (
   error: SerializedError,
