@@ -1,6 +1,6 @@
 # Changelog
 
-### _unreleased_
+### @aduh95/Viz.js v3.5.0 (2021-07-06)
 
 - Bump Emscripten version to
   [2.0.25](https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#2025).
