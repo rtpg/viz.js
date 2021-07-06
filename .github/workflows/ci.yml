@@ -44,7 +44,7 @@ jobs:
             runner.os }}-${{ steps.makefile-decipher.outputs.EXPAT_VERSION
             }}-${{ steps.makefile-decipher.outputs.GRAPHVIZ_VERSION }}
       - name: Setup emsdk (use cache if found, create otherwise)
-        uses: mymindstorm/setup-emsdk@v8
+        uses: mymindstorm/setup-emsdk@v10
         with:
           version: ${{ steps.makefile-decipher.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
