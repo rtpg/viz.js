@@ -10,6 +10,7 @@ removeEventListener("message", o);
 onmessage = function (m) {
   initWASM({
     wasmBinary,
+    locateFile: Function.prototype,
   })
     .then(() => o(m))
     .catch(console.error);
