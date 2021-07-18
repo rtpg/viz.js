@@ -6,7 +6,7 @@ NODE ?= node
 
 EMSCRIPTEN_VERSION = 2.0.25
 EXPAT_VERSION = 2.4.1
-GRAPHVIZ_VERSION = 2.47.3
+GRAPHVIZ_VERSION = 2.48.0
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.xz"
