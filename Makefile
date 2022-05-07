@@ -367,8 +367,8 @@ endif
 		mv CHANGELOG.md.tmp CHANGELOG.md && \
 		git add CHANGELOG.md
 	git add package.json
-	git commit -m "v$(VIZ_VERSION)"
-	git tag "v$(VIZ_VERSION)"
+	git commit -S -m "v$(VIZ_VERSION)"
+	git tag -s "v$(VIZ_VERSION)"
 	@echo "Publishing new version to npm registery..."
 	$(YARN) npm publish --access public
 	@echo "Pushing new version to git repository..."
