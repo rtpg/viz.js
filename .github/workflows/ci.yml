@@ -133,7 +133,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Prepare tests
         run:
-          rm package.json && npm i mocha && npm i viz.js-vunreleased+${{
+          rm package.json && npm i mocha@9 && npm i viz.js-vunreleased+${{
           github.sha }}.tar.gz && echo 'const assert=require("assert");' >
           test/node.cjs && awk '/^describe\(/{o=1} { if (o==1) { print } }'
           test/node.js >> test/node.cjs
