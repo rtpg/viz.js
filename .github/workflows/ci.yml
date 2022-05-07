@@ -17,12 +17,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Cache npm dependencies
-        id: cache-npm-libraries
-        uses: actions/cache@v3
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run:
+          echo "::set-output name=dir::$(corepack yarn config get cacheFolder)"
+
+      - uses: actions/cache@v3
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
-          path: .yarn/cache/*
-          key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
       - run: sudo apt update
       - name: Install utilities
         run: sudo apt install -y automake build-essential git pkg-config unzip
@@ -80,12 +86,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Cache npm dependencies
-        id: cache-npm-libraries
-        uses: actions/cache@v3
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run:
+          echo "::set-output name=dir::$(corepack yarn config get cacheFolder)"
+
+      - uses: actions/cache@v3
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
-          path: .yarn/cache/*
-          key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
       - name: Download tarball from build job
         uses: actions/download-artifact@v3
         with:
