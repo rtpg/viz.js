@@ -2,8 +2,8 @@
 
 ### _unreleased_
 
-- Bump Graphviz version to
-  [2.48.0](https://gitlab.com/graphviz/graphviz/-/blob/main/CHANGELOG.md#2480-2021-07-17).
+- Upgrade Graphviz version to
+  [3.0.0](https://gitlab.com/graphviz/graphviz/-/blob/main/CHANGELOG.md#300-2022-02-26).
 
 ### @aduh95/Viz.js v3.5.0 (2021-07-06)
 

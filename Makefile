@@ -6,7 +6,7 @@ NODE ?= node
 
 EMSCRIPTEN_VERSION = 2.0.25
 EXPAT_VERSION = 2.4.1
-GRAPHVIZ_VERSION = 2.48.0
+GRAPHVIZ_VERSION = 3.0.0
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.xz"
@@ -236,8 +236,6 @@ expat-full: $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER
 .PHONY: graphviz-full
 graphviz-full: $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION) | $(PREFIX_FULL) $(DEPS_FOLDER)/package.json
 	grep -q $(GRAPHVIZ_VERSION) $</graphviz_version.h
-	cd $< && ./configure --quiet
-	cd $</lib/gvpr && $(MAKE) --quiet mkdefs CFLAGS="-w"
 	cd $< && $(EMCONFIGURE) ./configure --quiet --without-sfdp --disable-ltdl --enable-static --disable-shared --prefix=$(PREFIX_FULL) --libdir=$(PREFIX_FULL)/lib CFLAGS="-Oz -w"
 	cd $< && $(MAKE) --quiet lib plugin
 	cd $</lib && $(MAKE) --quiet install
