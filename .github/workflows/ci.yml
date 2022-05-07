@@ -16,10 +16,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache npm dependencies
         id: cache-npm-libraries
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .yarn/cache/*
           key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
@@ -33,7 +33,7 @@ jobs:
           Makefile
       - name: Cache emsdk and build dependencies
         id: cache-system-libraries
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ${{env.EM_CACHE_FOLDER}}
@@ -44,7 +44,7 @@ jobs:
             runner.os }}-${{ steps.makefile-decipher.outputs.EXPAT_VERSION
             }}-${{ steps.makefile-decipher.outputs.GRAPHVIZ_VERSION }}
       - name: Setup emsdk (use cache if found, create otherwise)
-        uses: mymindstorm/setup-emsdk@v10
+        uses: mymindstorm/setup-emsdk@v11
         with:
           version: ${{ steps.makefile-decipher.outputs.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
@@ -79,19 +79,19 @@ jobs:
         node: [12.x, 14.x, 16.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache npm dependencies
         id: cache-npm-libraries
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .yarn/cache/*
           key: ${{ hashFiles('**/yarn.lock') }}-${{ runner.os }}
       - name: Download tarball from build job
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: viz.js-vunreleased+${{ github.sha }}.tar.gz
       - name: Install Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Run tests
@@ -108,13 +108,13 @@ jobs:
         node: [v10.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download tarball from build job
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: viz.js-vunreleased+${{ github.sha }}.tar.gz
       - name: Install Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         env:
           RUNNER_TEMP: /tmp
         with:
@@ -136,12 +136,12 @@ jobs:
 
     strategy:
       matrix:
-        deno: [v1.11.5]
+        deno: [v1.21.2]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download tarball from build job
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: viz.js-vunreleased+${{ github.sha }}.tar.gz
       - name: Install Deno ${{ matrix.deno }}
