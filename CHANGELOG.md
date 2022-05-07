@@ -1,6 +1,6 @@
 # Changelog
 
-### _unreleased_
+### @aduh95/Viz.js v3.6.0 (2022-05-07)
 
 - Upgrade Emscripten version to
   [3.1.10](https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#3110---05022022).
