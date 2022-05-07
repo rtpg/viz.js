@@ -11,7 +11,6 @@ VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell g
 
 EXPAT_SOURCE_URL = "https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$(EXPAT_VERSION))/expat-$(EXPAT_VERSION).tar.xz"
 GRAPHVIZ_SOURCE_URL = "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/$(GRAPHVIZ_VERSION)/graphviz-$(GRAPHVIZ_VERSION).tar.xz"
-YARN_SOURCE_URL = "https://github.com/yarnpkg/berry/raw/master/packages/berry-cli/bin/berry.js"
 
 USE_CLOSURE ?= 1
 
@@ -21,8 +20,8 @@ CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz
 LINK_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=$(USE_CLOSURE) --closure $(USE_CLOSURE) -g1
 LINK_INCLUDES = -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-YARN_PATH = $(abspath $(shell awk '{ if($$1 == "yarnPath:") print $$2; }' .yarnrc.yml))
-YARN ?= $(NODE) $(YARN_PATH)
+COREPACK ?= $(NODE) $(shell command -v corepack)
+YARN ?= $(COREPACK) yarn
 
 TSC ?= $(YARN) tsc
 TS_FLAGS = --lib esnext,WebWorker
@@ -249,7 +248,6 @@ $(DEPS_FOLDER)/expat-$(EXPAT_VERSION) $(DEPS_FOLDER)/graphviz-$(GRAPHVIZ_VERSION
 	mkdir -p $@
 	tar -xJf $< --strip-components 1 -C $@
 
-$(YARN_PATH): SOURCE=$(YARN_SOURCE_URL)
 sources/graphviz-$(GRAPHVIZ_VERSION).tar.xz: SOURCE=$(GRAPHVIZ_SOURCE_URL)
 sources/expat-$(EXPAT_VERSION).tar.xz: SOURCE=$(EXPAT_SOURCE_URL)
 sources/expat-$(EXPAT_VERSION).tar.xz sources/graphviz-$(GRAPHVIZ_VERSION).tar.xz $(YARN_PATH):
@@ -281,8 +279,8 @@ endif
 test-ts-integration: sources/viz.js-v$(VIZ_VERSION).tar.gz | $(YARN_PATH) node_modules/typescript
 	$(eval TMP := $(shell mktemp -d))
 	mkdir -p $(TMP)/$@
-	awk '{ if($$1 != "yarnPath:") print $$0; }' .yarnrc.yml > $(TMP)/$@/.yarnrc.yml
-	touch $(TMP)/$@/package.json
+	cp .yarnrc.yml $(TMP)/$@/.yarnrc.yml
+	$(NODE) -p '({packageManager}=require("./package.json")),JSON.stringify({packageManager})' > $(TMP)/$@/package.json
 	cp $< $(TMP)/viz.js.tar.gz
 	cd $(TMP)/$@ && $(YARN) add $(TMP)/viz.js.tar.gz
 	cp test/integration.ts $(TMP)/$@/

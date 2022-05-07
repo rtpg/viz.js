@@ -262,9 +262,10 @@ As Deno aims to expose all the web API, you can use the browser implementation.
 ## Building From Source
 
 To build from source, first
-[install the Emscripten SDK](https://emscripten.org/docs/getting_started/index.html).
-You'll also need [Node.js 13+](https://nodejs.org/) and
-[Deno](https://deno.land/) to run the tests.
+[install the Emscripten SDK](https://emscripten.org/docs/getting_started/index.html)
+and [Corepack](https://github.com/nodejs/corepack). You'll also need
+[Node.js 14+](https://nodejs.org/) and [Deno](https://deno.land/) to run the
+tests.
 
 Using Homebrew (macOS or GNU/Linux):
 
