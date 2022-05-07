@@ -20,7 +20,7 @@ CC_INCLUDES = -I$(PREFIX_FULL)/include -I$(PREFIX_FULL)/include/graphviz
 LINK_FLAGS = --bind -s ALLOW_MEMORY_GROWTH=1 -s DYNAMIC_EXECUTION=$(USE_CLOSURE) --closure $(USE_CLOSURE) -g1
 LINK_INCLUDES = -L$(PREFIX_FULL)/lib -L$(PREFIX_FULL)/lib/graphviz -lgvplugin_core -lgvplugin_dot_layout -lgvplugin_neato_layout -lcgraph -lgvc -lgvpr -lpathplan -lexpat -lxdot -lcdt
 
-COREPACK ?= $(NODE) $(shell command -v corepack)
+COREPACK ?= $(NODE) $(shell which corepack)
 YARN ?= $(COREPACK) yarn
 
 TSC ?= $(YARN) tsc
