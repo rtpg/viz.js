@@ -16,7 +16,8 @@ dist/
 test/deno-files/render.wasm.*
 test/deno-files/index.d.ts
 
-.yarn/
+/.yarn/*
+!/.yarn/patches
 .pnp.*
 
 CHANGELOG.md.tmp
