@@ -4,6 +4,8 @@
 
 - Upgrade Emscripten version to
   [3.1.12](https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#3112---05252022).
+- Upgrade Graphviz version to
+  [4.0.0](https://gitlab.com/graphviz/graphviz/-/blob/main/CHANGELOG.md#400-2022-05-29).
 
 ### @aduh95/Viz.js v3.6.0 (2022-05-07)
 
