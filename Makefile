@@ -110,11 +110,13 @@ async/index.d.ts sync/index.d.ts: %/index.d.ts: dist/render_%.d.ts | %
 wasm worker:
 	echo "throw new Error('The bundler you are using does not support package.json#exports.')" > $@
 
+worker.d.ts:
+	echo 'export*from"./dist/worker";export{default}from"./dist/worker"' > $@
 
-dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts: dist/%.d.ts: src/%.ts node_modules/typescript | dist
+dist/index.d.ts dist/render_async.d.ts dist/render_sync.d.ts dist/worker.d.ts: dist/%.d.ts: src/%.ts node_modules/typescript | dist
 	$(TSC) $(TS_FLAGS) --outDir $(@D) -d --emitDeclarationOnly $<
 
-dist/types.d.ts: src/types.d.ts | dist
+dist/render.d.ts dist/types.d.ts: dist/%.d.ts: src/%.d.ts | dist
 	cp $< $@
 
 dist/index.mjs: build/index.js node_modules/terser | dist

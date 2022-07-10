@@ -1,10 +1,8 @@
 import type { SerializedError, RenderResponse, RenderRequest } from "./types";
 import type { Worker } from "worker_threads";
 
-import initializeWasm, {
-  WebAssemblyModule,
-  EMCCModuleOverrides,
-} from "./render";
+import initializeWasm from "./render";
+import type { WebAssemblyModule, EMCCModuleOverrides } from "./render";
 import render from "./viz_wrapper.js";
 
 /* eslint-disable no-var */

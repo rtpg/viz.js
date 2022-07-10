@@ -6,6 +6,15 @@
 import Viz from "@aduh95/viz.js";
 import vizRenderStringAsync from "@aduh95/viz.js/async";
 import vizRenderStringSync from "@aduh95/viz.js/sync";
+import getWorker from "@aduh95/viz.js/worker";
+
+// @ts-expect-error
+getWorker("");
+// @ts-expect-error
+getWorker(1);
+
+getWorker();
+getWorker({});
 
 // @ts-expect-error
 Viz({ workerURL: "string" });

@@ -12,6 +12,7 @@ dist/
 /sync/
 /wasm
 /worker
+/worker.d.ts
 
 test/deno-files/render.wasm.*
 test/deno-files/index.d.ts

@@ -15,6 +15,7 @@
     "./sync": "./dist/render_sync.cjs",
     "./wasm": "./dist/render.wasm",
     "./worker": {
+      "types": "./dist/worker.d.ts",
       "node": "./dist/render.node.mjs",
       "default": "./dist/render.browser.js"
     }
@@ -33,6 +34,7 @@
     "dist/index.mjs",
     "dist/index.d.ts",
     "dist/types.d.ts",
+    "dist/render.d.ts",
     "dist/render.node.mjs",
     "dist/render.browser.js",
     "dist/render.wasm",
@@ -40,12 +42,14 @@
     "dist/render_async.d.ts",
     "dist/render_sync.cjs",
     "dist/render_sync.d.ts",
+    "dist/worker.d.ts",
     "async/index.js",
     "async/index.d.ts",
     "sync/index.js",
     "sync/index.d.ts",
     "wasm",
-    "worker"
+    "worker",
+    "worker.d.ts"
   ],
   "contributors": [
     "Mike Daines <mdaines@fastmail.com>",
@@ -71,8 +75,5 @@
     "semver": "^7.3.2",
     "terser": "^5.2.1",
     "typescript": "^4.0.2"
-  },
-  "resolutions": {
-    "@types/node": "patch:@types/node@npm:17.0.36#.yarn/patches/@types-node-npm-17.0.36-3b14155e20.patch"
   }
 }
