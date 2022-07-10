@@ -3,7 +3,7 @@
 ### _unreleased_
 
 - Upgrade Emscripten version to
-  [3.1.12](https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#3112---05252022).
+  [3.1.15](https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#3115---07012022).
 - Upgrade Graphviz version to
   [5.0.0](https://gitlab.com/graphviz/graphviz/-/blob/main/CHANGELOG.md#500-2022-07-07).
 

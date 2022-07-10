@@ -4,7 +4,7 @@ PREFIX_FULL = $(abspath ./prefix-full)
 
 NODE ?= node
 
-EMSCRIPTEN_VERSION = 3.1.12
+EMSCRIPTEN_VERSION = 3.1.15
 EXPAT_VERSION = 2.4.8
 GRAPHVIZ_VERSION = 5.0.0
 VIZ_VERSION ?= $(shell $(NODE) -p "require('./package.json').version")+$(shell git rev-parse HEAD)
