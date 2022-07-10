@@ -180,17 +180,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:17.0.36":
-  version: 17.0.36
-  resolution: "@types/node@npm:17.0.36"
-  checksum: 11055fde0a1e1421113849b5e32c7022911efc0be670729947bf0162970e79962d804b1eb8a9afb291380cac97cf0e684511415d586ae5fe1560322c940fe188
-  languageName: node
-  linkType: hard
-
-"@types/node@patch:@types/node@npm:17.0.36#.yarn/patches/@types-node-npm-17.0.36-3b14155e20.patch::locator=%40aduh95%2Fviz.js%40workspace%3A.":
-  version: 17.0.36
-  resolution: "@types/node@patch:@types/node@npm%3A17.0.36#.yarn/patches/@types-node-npm-17.0.36-3b14155e20.patch::version=17.0.36&hash=ccbcdb&locator=%40aduh95%2Fviz.js%40workspace%3A."
-  checksum: b2185c794999ab7d90e4d47225b8e4ecd00a5171877c679495c2d7c6d2fc4641a15c03ab75671e50423343f6811fba56f653bed59fafc7da88734925287e0641
+"@types/node@npm:*, @types/node@npm:^18.0.0":
+  version: 18.0.3
+  resolution: "@types/node@npm:18.0.3"
+  checksum: 5dec59fbbc1186c808b53df1ca717dad034dbd6a901c75f5b052c845618b531b05f27217122c6254db99529a68618e4cfc534ae3dbf4e88754e9e572df80defa
   languageName: node
   linkType: hard
 
