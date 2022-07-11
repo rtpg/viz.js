@@ -180,10 +180,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^18.0.0":
+"@types/node@npm:18.0.3":
   version: 18.0.3
   resolution: "@types/node@npm:18.0.3"
   checksum: 5dec59fbbc1186c808b53df1ca717dad034dbd6a901c75f5b052c845618b531b05f27217122c6254db99529a68618e4cfc534ae3dbf4e88754e9e572df80defa
+  languageName: node
+  linkType: hard
+
+"@types/node@patch:@types/node@npm:18.0.3#.yarn/patches/@types-node-npm-18.0.3-c2cbe1f26e.patch::locator=%40aduh95%2Fviz.js%40workspace%3A.":
+  version: 18.0.3
+  resolution: "@types/node@patch:@types/node@npm%3A18.0.3#.yarn/patches/@types-node-npm-18.0.3-c2cbe1f26e.patch::version=18.0.3&hash=c8bb94&locator=%40aduh95%2Fviz.js%40workspace%3A."
+  checksum: 2a715f947224e5fc04ed8d491323a9c5d6ebde3ec0792ef8fa1f4b5e9e7ae335b1add7ec0fc0f1658352b109f043e2c1ce26e579bb1cefac231b1e558d16917d
   languageName: node
   linkType: hard
 

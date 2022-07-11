@@ -75,5 +75,8 @@
     "semver": "^7.3.2",
     "terser": "^5.2.1",
     "typescript": "^4.0.2"
+  },
+  "resolutions": {
+    "@types/node": "patch:@types/node@npm:18.0.3#.yarn/patches/@types-node-npm-18.0.3-c2cbe1f26e.patch"
   }
 }
