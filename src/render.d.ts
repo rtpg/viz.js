@@ -17,5 +17,5 @@ export type WebAssemblyModule = {
  * @param Module An object to initialize Emscripten Module
  */
 export default function (
-  Module: EMCCModuleOverrides
+  Module?: EMCCModuleOverrides
 ): Promise<WebAssemblyModule>;

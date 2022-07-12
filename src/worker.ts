@@ -17,13 +17,17 @@ declare var addEventListener: (type: "message", data: EventListener) => void;
 //
 /* eslint-enable no-var */
 
+type MaybeEMCCModuleOverrides = Promise<EMCCModuleOverrides | undefined>;
+type NodeJsAPI = (moduleOverrides?: EMCCModuleOverrides) => Worker;
+type BrowserAPI = (
+  moduleOverrides?: EMCCModuleOverrides | MaybeEMCCModuleOverrides
+) => MaybeEMCCModuleOverrides;
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: exports must be declared in order to produce valid ES6 code
-let exports: (
-  moduleOverrides?: EMCCModuleOverrides
-) => Promise<EMCCModuleOverrides> | Worker;
+let exports: NodeJsAPI | BrowserAPI;
 
-let asyncModuleOverrides: Promise<EMCCModuleOverrides>;
+let asyncModuleOverrides: MaybeEMCCModuleOverrides;
 let Module: WebAssemblyModule;
 async function getModule(): Promise<WebAssemblyModule> {
   if (Module === undefined) {
@@ -60,8 +64,8 @@ if (ENVIRONMENT_IS_WORKER) {
   asyncModuleOverrides = Promise.resolve({});
 
   exports = (
-    moduleOverrides: EMCCModuleOverrides
-  ): Promise<EMCCModuleOverrides> => {
+    moduleOverrides?: EMCCModuleOverrides
+  ): MaybeEMCCModuleOverrides => {
     return (asyncModuleOverrides = Promise.resolve(moduleOverrides));
   };
   addEventListener("message", onmessage);
@@ -80,7 +84,7 @@ if (ENVIRONMENT_IS_WORKER) {
         );
       },
     } as Promise<never>;
-    exports = (moduleOverrides: EMCCModuleOverrides): Worker =>
+    exports = (moduleOverrides?: EMCCModuleOverrides): Worker =>
       new Worker(__filename, {
         type: "module",
         workerData: { __filename, moduleOverrides },
@@ -88,7 +92,7 @@ if (ENVIRONMENT_IS_WORKER) {
   } else if (workerData.__filename === __filename) {
     // if workerData is `__filename`, we assume worker has been spawned by this
     // module and user wants the default behavior.
-    asyncModuleOverrides = Promise.resolve(workerData.moduleOverrides || {});
+    asyncModuleOverrides = Promise.resolve(workerData.moduleOverrides);
 
     parentPort.on("message", (data: RenderResponse) =>
       onmessage({ data } as MessageEvent)
@@ -97,19 +101,19 @@ if (ENVIRONMENT_IS_WORKER) {
   } else {
     // Worker spawned by another module or script, exports a function that lets
     // user define a custom override objects.
-    let resolveModuleOverrides: (value: EMCCModuleOverrides) => void;
+    let resolveModuleOverrides: (value?: EMCCModuleOverrides) => void;
     asyncModuleOverrides = new Promise((done) => {
       resolveModuleOverrides = done;
     });
     exports = (
-      moduleOverrides: EMCCModuleOverrides
-    ): Promise<EMCCModuleOverrides> => {
+      moduleOverrides?: EMCCModuleOverrides
+    ): MaybeEMCCModuleOverrides => {
       if (resolveModuleOverrides) {
         resolveModuleOverrides(moduleOverrides);
         return asyncModuleOverrides;
       } else {
         return Promise.resolve().then(
-          () => exports(moduleOverrides) as Promise<EMCCModuleOverrides>
+          () => exports(moduleOverrides) as MaybeEMCCModuleOverrides
         );
       }
     };
